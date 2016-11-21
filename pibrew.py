@@ -1,13 +1,12 @@
 import arrow
 from flask import Flask, render_template
 from flask_bootstrap import Bootstrap
-from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO
 
 
 class BrewController():
     def __init__(self, app=None):
-        if app is None:
+        if app is None:  # pragma: no cover
             return
         self.init_app(app)
 
@@ -25,18 +24,20 @@ def handle_controller():
 
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 bootstrap = Bootstrap(app)
-db = SQLAlchemy(app)
-brew_controller = BrewController(app)
-
-# add flask socketio and start a background task
 socketio = SocketIO(app)
-socketio.start_background_task(target=handle_controller)
+brew_controller = BrewController(app)
 
 
 @app.route('/')
 def index():
     return render_template('index.html')
+
+
+@socketio.on('connect')
+def on_connect():
+    socketio.send('connected')
 
 
 @socketio.on('enable heater')
@@ -63,5 +64,9 @@ def on_disable_mixer():
     socketio.emit('mixer disabled')
 
 
-if __name__ == '__main__':
+# start the background task
+socketio.start_background_task(target=handle_controller)
+
+
+if __name__ == '__main__':  # pragma: no cover
     socketio.run(app)
