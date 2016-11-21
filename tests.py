@@ -3,7 +3,7 @@ import sys
 import subprocess
 import unittest
 
-CHECK_COVERAGE = False
+CHECK_COVERAGE = True
 
 if CHECK_COVERAGE:
     cov = coverage.Coverage(branch=True)

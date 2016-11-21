@@ -1,5 +1,6 @@
 import arrow
 from flask import Flask, render_template
+from flask_sqlalchemy import SQLAlchemy
 from flask_bootstrap import Bootstrap
 from flask_socketio import SocketIO
 
@@ -14,17 +15,36 @@ class BrewController():
         self.app = app
         self.heater_enabled = False
         self.mixer_enabled = False
+        self.temp_setpoint = 50.0
+        self.temp_current = 20.0
+
+    def process(self):
+        if self.temp_current < self.temp_setpoint:
+            self.temp_current += 1
 
 
 def handle_controller():
+    interval = app.config['PROCESS_INTERVAL']
     while(1):
         current_time = arrow.now()
-        socketio.emit('update', {'time': current_time.for_json()})
-        socketio.sleep(1)
+        brew_controller.process()
+        socketio.emit(
+            'update',
+            {
+                'time': current_time.for_json(),
+                'temp_setpoint': brew_controller.temp_setpoint,
+                'temp_current': brew_controller.temp_current
+            }
+        )
+        socketio.sleep(interval)
 
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['PROCESS_INTERVAL'] = 1.0  # interval for brew controller processing
+
+# Flask Plugins
+db = SQLAlchemy(app)
 bootstrap = Bootstrap(app)
 socketio = SocketIO(app)
 brew_controller = BrewController(app)

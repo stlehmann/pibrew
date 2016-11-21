@@ -14,7 +14,12 @@
 
     socket.on('update', function(data) {
       var current_time = data['time'];
+      var temp_setpoint = data['temp_setpoint'];
+      var temp_current = data['temp_current'];
+
       $('#timestamp').text(current_time);
+      $('#temp_setpoint').text(temp_setpoint);
+      $('#temp_current').text(temp_current);
     });
 
     {# change heater state #}
@@ -71,6 +76,8 @@
     <div class="row">
       <div class="col-xs-12">
         <p id="timestamp"></p>
+        <p id="temp_setpoint"></p>
+        <p id="temp_current"></p>
       </div>
     </div>
   </div>
