@@ -1,0 +1,77 @@
+{% extends 'bootstrap/base.html' %}
+
+{% block scripts %}
+  <script src="https://code.jquery.com/jquery-3.1.1.js" integrity="sha256-16cdPddA6VdVInumRGo6IbivbERE8p7CQR3HzTBuELA=" crossorigin="anonymous"></script>
+  <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+
+  <script>
+  $(document).ready(function() {
+    var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+    socket.on('connect', function() {
+        socket.emit('my event', {data: 'I\'m connected!'});
+    });
+
+    socket.on('update', function(data) {
+      var current_time = data['time'];
+      $('#timestamp').text(current_time);
+    });
+
+    {# change heater state #}
+    $('#enableHeater').click(function() {
+      if ($(this).hasClass('btn-primary')) {
+        socket.emit('disable heater');
+      }
+      else {
+        socket.emit('enable heater');
+      }
+    });
+
+    socket.on('heater enabled', function() {
+      $('#enableHeater').addClass('btn-primary');
+    });
+
+    socket.on('heater disabled', function() {
+      $('#enableHeater').removeClass('btn-primary');
+    })
+
+    {# change mixer sate #}
+    $('#enableMixer').click(function() {
+      if ($(this).hasClass('btn-primary')) {
+        socket.emit('disable mixer');
+      }
+      else {
+        socket.emit('enable mixer');
+      }
+    })
+
+    socket.on('mixer enabled', function() {
+      $('#enableMixer').addClass('btn-primary')
+    });
+
+    socket.on('mixer disabled', function() {
+      $('#enableMixer').removeClass('btn-primary');
+    });
+  });
+  </script>
+  {{  super() }}
+{% endblock %}
+
+{% block navbar %}
+{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <div class="row">
+      <div class="col-xs-12">
+        <button id="enableHeater" class="btn btn-default">Heizung</button>
+        <button id="enableMixer" class="btn btn-default">Rührwerk</button>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-12">
+        <p id="timestamp"></p>
+      </div>
+    </div>
+  </div>
+{% endblock %}

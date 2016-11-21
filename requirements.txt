@@ -1,0 +1,9 @@
+arrow
+coverage
+eventlet
+flake8
+flask
+flask-bootstrap
+flask-script
+flask-socketio
+flask-sqlalchemy

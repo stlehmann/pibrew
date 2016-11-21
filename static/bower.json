@@ -1,0 +1,21 @@
+{
+  "name": "static",
+  "authors": [
+    "Stefan Lehmann <Stefan.St.Lehmann@gmail.com>"
+  ],
+  "description": "",
+  "main": "",
+  "license": "MIT",
+  "homepage": "",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "socket.io": "^1.6.0"
+  }
+}
