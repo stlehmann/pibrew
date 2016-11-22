@@ -1,13 +1,13 @@
 import unittest
 
-from pibrew import app, socketio, brew_controller
+from pibrew import create_app, socketio, brew_controller
 
 
 class PiBrewTest(unittest.TestCase):
 
     def setUp(self):
-        app.testing = True
-        self.client = app.test_client()
+        self.app = create_app('testing')
+        self.client = self.app.test_client()
 
     def tearDown(self):
         pass
@@ -17,13 +17,13 @@ class PiBrewTest(unittest.TestCase):
         self.assertEqual(200, rv.status_code)
 
     def test_connect(self):
-        client = socketio.test_client(app)
+        client = socketio.test_client(self.app)
         received = client.get_received()
         self.assertEqual(len(received), 1)
         self.assertEqual(received[0]['args'], 'connected')
 
     def test_enable_heater(self):
-        client = socketio.test_client(app)
+        client = socketio.test_client(self.app)
         client.get_received()
         # enable heater
         client.emit('enable heater')
@@ -37,7 +37,7 @@ class PiBrewTest(unittest.TestCase):
         self.assertFalse(brew_controller.heater_enabled)
 
     def test_enable_mixer(self):
-        client = socketio.test_client(app)
+        client = socketio.test_client(self.app)
         client.get_received()
         # enable heater
         client.emit('enable mixer')

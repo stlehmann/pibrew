@@ -3,15 +3,16 @@ import subprocess
 import sys
 import eventlet
 from flask_script import Manager
-from pibrew import app, socketio
+from pibrew import create_app, socketio
 
 
-manager = Manager(app)
+manager = Manager(create_app)
 
 
 @manager.command
 def run():
     eventlet.monkey_patch()
+    app = create_app()
     socketio.run(app, host='localhost', port=5000)
 
 

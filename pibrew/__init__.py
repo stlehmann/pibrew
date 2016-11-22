@@ -1,3 +1,3 @@
-from .pibrew import app, brew_controller, socketio
+from .pibrew import create_app, brew_controller, socketio
 
-__all__ = [app, brew_controller, socketio]  # pragma: no cover
+__all__ = [create_app, brew_controller, socketio]  # pragma: no cover
