@@ -91,5 +91,5 @@ ENV/
 .ropeproject
 /pibrew.sublime-project
 /pibrew.sublime-workspace
-/static/bower_components/
+/pibrew/static/bower_components/
 .idea/
