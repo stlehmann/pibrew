@@ -1,14 +1,4 @@
-import coverage
-import sys
-import subprocess
 import unittest
-
-CHECK_COVERAGE = True
-
-if CHECK_COVERAGE:
-    cov = coverage.Coverage(branch=True)
-    cov.start()
-
 
 from pibrew import app, socketio, brew_controller
 
@@ -59,21 +49,3 @@ class PiBrewTest(unittest.TestCase):
         received = client.get_received()
         self.assertEqual('mixer disabled', received[0]['name'])
         self.assertFalse(brew_controller.mixer_enabled)
-
-
-if __name__ == '__main__':
-    tests_ok = unittest.main(verbosity=2, exit=False).result.wasSuccessful()
-
-    # print coverage report
-    if CHECK_COVERAGE:
-        cov.stop()
-        print('')
-        cov.report(omit=['tests.py', 'venv/*'], show_missing=True)
-        cov.html_report(omit=['tests.py', 'venv/*'])
-
-    # lint the code
-    print('')
-    lint_ok = subprocess.call(['flake8', '--ignore=E402', 'pibrew.py',
-                               'tests.py']) == 0
-
-    sys.exit((0 if tests_ok else 1) + (0 if lint_ok else 2))
