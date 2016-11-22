@@ -4,28 +4,21 @@ from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_bootstrap import Bootstrap
 from flask_socketio import SocketIO
+from .brewcontroller import BrewController
 from config import config
 
 
-class BrewController():
-    def __init__(self, app=None):
-        if app is None:  # pragma: no cover
-            return
-        self.init_app(app)
+app = Flask(__name__)
+app.config.from_object(config[os.environ.get('PIBREW_CONFIG', 'development')])
 
-    def init_app(self, app):
-        self.app = app
-        self.heater_enabled = False
-        self.mixer_enabled = False
-        self.temp_setpoint = 50.0
-        self.temp_current = 20.0
-
-    def process(self):
-        if self.temp_current < self.temp_setpoint:
-            self.temp_current += 1
+# Flask Plugins
+db = SQLAlchemy(app)
+bootstrap = Bootstrap(app)
+socketio = SocketIO(app)
+brew_controller = BrewController(app)
 
 
-def handle_controller():
+def process_controller():
     interval = app.config['PROCESS_INTERVAL']
     while(1):
         current_time = arrow.now()
@@ -39,16 +32,6 @@ def handle_controller():
             }
         )
         socketio.sleep(interval)
-
-
-app = Flask(__name__)
-app.config.from_object(config[os.environ.get('PIBREW_CONFIG', 'development')])
-
-# Flask Plugins
-db = SQLAlchemy(app)
-bootstrap = Bootstrap(app)
-socketio = SocketIO(app)
-brew_controller = BrewController(app)
 
 
 @app.route('/')
@@ -86,7 +69,7 @@ def on_disable_mixer():
 
 
 # start the background task
-socketio.start_background_task(target=handle_controller)
+socketio.start_background_task(target=process_controller)
 
 
 if __name__ == '__main__':  # pragma: no cover
