@@ -42,7 +42,7 @@ def handle_controller():
 
 
 app = Flask(__name__)
-app.config.from_object(os.environ.get('PIBREW_CONFIG', 'devlopment'))
+app.config.from_object(config[os.environ.get('PIBREW_CONFIG', 'development')])
 
 # Flask Plugins
 db = SQLAlchemy(app)

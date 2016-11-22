@@ -1,6 +1,5 @@
 import os
 import sys
-import subprocess
 import unittest
 
 import coverage
@@ -15,16 +14,13 @@ def run():
 
     # run tests
     tests = unittest.TestLoader().discover('.')
-    tests_ok = unittest.TextTestRunner(verbosity=2).run(tests).wasSuccessful()
+    ok = unittest.TextTestRunner(verbosity=2).run(tests).wasSuccessful()
 
     # print coverage report
     cov.stop()
     print('')
-    cov.report(omit=['manage.py', 'tests/*', 'venv/*'])
+    omit = ['manage.py', 'tests/*', 'venv/*']
+    cov.report(omit=omit)
+    cov.html_report(omit=omit)
 
-    # lint the code
-    print('')
-    lint_ok = subprocess.call(['flake8', '--ignore=E402', 'pibrew.py',
-                               'tests']) == 0
-
-    sys.exit((0 if tests_ok else 1) + (0 if lint_ok else 2))
+    sys.exit(0 if ok else 1)
