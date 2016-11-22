@@ -1,3 +1,4 @@
+import arrow
 import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
@@ -31,7 +32,55 @@ def create_app(config_name=None):
     from .main import main as main_blueprint
     app.register_blueprint(main_blueprint, url_prefix='/')
 
+    # start the background task
+    socketio.start_background_task(target=process_controller)
+
     return app
+
+
+@socketio.on('connect')
+def on_connect():
+    socketio.send('connected')
+
+
+@socketio.on('enable heater')
+def on_enable_heater():
+    brew_controller.heater_enabled = True
+    socketio.emit('heater enabled')
+
+
+@socketio.on('disable heater')
+def on_disable_heater():
+    brew_controller.heater_enabled = False
+    socketio.emit('heater disabled')
+
+
+@socketio.on('enable mixer')
+def on_enable_mixer():
+    brew_controller.mixer_enabled = True
+    socketio.emit('mixer enabled')
+
+
+@socketio.on('disable mixer')
+def on_disable_mixer():
+    brew_controller.mixer_enabled = False
+    socketio.emit('mixer disabled')
+
+
+def process_controller():
+    interval = brew_controller.app.config['PROCESS_INTERVAL']
+    while(1):
+        current_time = arrow.now()
+        brew_controller.process()
+        socketio.emit(
+            'update',
+            {
+                'time': current_time.for_json(),
+                'temp_setpoint': brew_controller.temp_setpoint,
+                'temp_current': brew_controller.temp_current
+            }
+        )
+        socketio.sleep(interval)
 
 
 if __name__ == '__main__':  # pragma: no cover
