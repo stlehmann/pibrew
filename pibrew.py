@@ -1,8 +1,10 @@
+import os
 import arrow
 from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_bootstrap import Bootstrap
 from flask_socketio import SocketIO
+from config import config
 
 
 class BrewController():
@@ -40,8 +42,7 @@ def handle_controller():
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['PROCESS_INTERVAL'] = 1.0  # interval for brew controller processing
+app.config.from_object(os.environ.get('PIBREW_CONFIG', 'devlopment'))
 
 # Flask Plugins
 db = SQLAlchemy(app)
