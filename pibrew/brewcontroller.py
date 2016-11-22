@@ -1,4 +1,5 @@
 class BrewController():
+
     def __init__(self, app=None):
         if app is None:  # pragma: no cover
             return
@@ -12,5 +13,9 @@ class BrewController():
         self.temp_current = 20.0
 
     def process(self):
-        if self.temp_current < self.temp_setpoint:
-            self.temp_current += 1
+        if self.heater_enabled:
+            if self.temp_current < self.temp_setpoint:
+                self.temp_current += 1
+        else:
+            if self.temp_current > 20.0:
+                self.temp_current -= 1
