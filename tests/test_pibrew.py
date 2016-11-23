@@ -13,6 +13,10 @@ class PiBrewTest(unittest.TestCase):
     def tearDown(self):
         pass
 
+    def test_default_config(self):
+        self.app = create_app()
+        self.assertTrue(self.app.config['DEBUG'])
+
     def test_index(self):
         rv = self.client.get('/')
         self.assertEqual(200, rv.status_code)

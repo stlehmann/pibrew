@@ -9,7 +9,7 @@ def run():
     os.environ['DATABASE_URL'] = 'sqlite://'
 
     # start coverage engine
-    cov = coverage.Coverage(branch=True, timid=True)
+    cov = coverage.Coverage(branch=True)
     cov.start()
 
     # run tests

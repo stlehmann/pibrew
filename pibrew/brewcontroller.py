@@ -3,7 +3,7 @@ class BrewController():
     def __init__(self, app=None):
         if app is None:
             return
-        self.init_app(app)
+        self.init_app(app)  # pragma: no cover
 
     def init_app(self, app):
         self.app = app
