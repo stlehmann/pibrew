@@ -1,7 +1,7 @@
 class BrewController():
 
     def __init__(self, app=None):
-        if app is None:  # pragma: no cover
+        if app is None:
             return
         self.init_app(app)
 

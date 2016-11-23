@@ -26,6 +26,7 @@ class ProductionConfig(Config):
 class TestingConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = 'sqlite://'
+    PROCESS_INTERVAL = 0.1  # interval for brew controller processing
 
 
 config = {

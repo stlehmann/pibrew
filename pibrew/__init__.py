@@ -10,6 +10,8 @@ from config import config
 from .brewcontroller import BrewController
 
 
+background_task_running = False
+
 # Flask Plugins
 db = SQLAlchemy()
 bootstrap = Bootstrap()
@@ -37,8 +39,11 @@ def create_app(config_name=None):
     from .main import main as main_blueprint
     app.register_blueprint(main_blueprint, url_prefix='/')
 
-    # start the background task
-    socketio.start_background_task(target=process_controller)
+    # start the background task only once even if there are more then one app
+    global background_task_running
+    if not background_task_running:
+        background_task_running = True
+        socketio.start_background_task(target=process_controller)
 
     return app
 

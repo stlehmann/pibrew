@@ -13,7 +13,7 @@ manager = Manager(create_app)
 def run():
     eventlet.monkey_patch()
     app = create_app()
-    socketio.run(app, host='localhost', port=5000)
+    socketio.run(app, host='localhost', port=5000, )
 
 
 @manager.command
