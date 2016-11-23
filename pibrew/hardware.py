@@ -59,6 +59,21 @@ class HdwRaspberry(HdwInterface):
             temp_c = float(temp_string) / 1000.0
             return temp_c
 
+    def _set_output(self, pin: int, state: bool):
+        os.system('gpio -g write {pin} {state}'.format(
+            pin=pin, state=state)
+        )
+
+    def set_heater_output(self, val: bool):
+        return self._set_output(
+            pin=HdwRaspberry.HEATER_PIN, state=(1 if val else 0)
+        )
+
+    def set_mixer_output(self, val: bool):
+        return self._set_output(
+            pin=HdwRaspberry.MIXER_PIN, state=(1 if val else 0)
+        )
+
 
 class HdwSimulator(HdwInterface):
 
