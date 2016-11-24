@@ -1,7 +1,6 @@
 import os
 import glob
 import time
-from config import base_dir
 
 
 class HdwInterface:
@@ -28,7 +27,7 @@ class HdwRaspberry(HdwInterface):
 
     def __init__(self):
 
-        super().__init__(self)
+        super().__init__()
 
         # enable gpio and onewire functions
         os.system('modprobe w1-gpio')
@@ -41,7 +40,7 @@ class HdwRaspberry(HdwInterface):
 
         # get the device file for the temperature sensor
         try:
-            folder = glob.glob(base_dir + HdwRaspberry.TEMPSENSOR)[0]
+            folder = glob.glob(self.base_dir + HdwRaspberry.TEMPSENSOR)[0]
         except IndexError:
             raise IOError('No temperature sensor found.')
         self.tempsensor_file = folder + '/w1_slave'
@@ -87,7 +86,7 @@ class HdwRaspberry(HdwInterface):
 class HdwSimulator(HdwInterface):
 
     def __init__(self):
-        super().__init__(self)
+        super().__init__()
         self.temperature = 20.0
         self.heater_output = False
         self.mixer_output = False

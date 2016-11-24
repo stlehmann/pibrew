@@ -16,7 +16,9 @@ background_task_running = False
 db = SQLAlchemy()
 bootstrap = Bootstrap()
 socketio = SocketIO()
-brew_controller = BrewController()
+brew_controller = BrewController(
+    bool(os.environ.get('PIBREW_SIMULATE', False))
+)
 
 
 from . import events # noqa
@@ -33,7 +35,6 @@ def create_app(config_name=None):
     db.init_app(app)
     bootstrap.init_app(app)
     socketio.init_app(app)
-    brew_controller.init_app(app)
 
     # create blueprints
     from .main import main as main_blueprint
@@ -43,14 +44,17 @@ def create_app(config_name=None):
     global background_task_running
     if not background_task_running:
         background_task_running = True
-        socketio.start_background_task(target=process_controller)
+        socketio.start_background_task(
+            process_controller, app.config['PROCESS_INTERVAL']
+        )
 
     return app
 
 
-def process_controller():
-    interval = brew_controller.app.config['PROCESS_INTERVAL']
+def process_controller(interval):
+
     while(1):
+
         current_time = arrow.now()
         brew_controller.process()
         socketio.emit(

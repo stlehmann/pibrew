@@ -40,7 +40,7 @@ class PiBrewTest(unittest.TestCase):
         # wait for one process cycle
         socketio.sleep(self.process_interval)
         received = client.get_received()
-        self.assertEquals('update', received[0]['name'])
+        self.assertEqual('update', received[0]['name'])
 
         # disable heater
         client.emit('disable heater')
@@ -51,7 +51,7 @@ class PiBrewTest(unittest.TestCase):
         # wait for one process cycle
         socketio.sleep(self.process_interval)
         received = client.get_received()
-        self.assertEquals('update', received[0]['name'])
+        self.assertEqual('update', received[0]['name'])
 
     def test_enable_mixer(self):
         client = socketio.test_client(self.app)
@@ -66,7 +66,7 @@ class PiBrewTest(unittest.TestCase):
         # wait for one process cycle
         socketio.sleep(self.process_interval)
         received = client.get_received()
-        self.assertEquals('update', received[0]['name'])
+        self.assertEqual('update', received[0]['name'])
 
         # disable mixer
         client.emit('disable mixer')
@@ -77,4 +77,4 @@ class PiBrewTest(unittest.TestCase):
         # wait for one process cycle
         socketio.sleep(self.process_interval)
         received = client.get_received()
-        self.assertEquals('update', received[0]['name'])
+        self.assertEqual('update', received[0]['name'])

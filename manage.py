@@ -1,9 +1,10 @@
 #!/usr/bin/env python
+import os
 import subprocess
 import sys
 import eventlet
 from flask_script import Manager
-from pibrew import create_app, socketio
+from pibrew import create_app, socketio, brew_controller
 
 
 manager = Manager(create_app)
