@@ -9,6 +9,15 @@ class HdwInterface:
     def __init__(self):
         pass
 
+    def read_temp(self):
+        raise NotImplementedError()
+
+    def set_heater_output(self, val: bool):
+        raise NotImplementedError()
+
+    def set_mixer_output(self, val: bool):
+        raise NotImplementedError()
+
 
 class HdwRaspberry(HdwInterface):
 
@@ -79,3 +88,15 @@ class HdwSimulator(HdwInterface):
 
     def __init__(self):
         super().__init__(self)
+        self.temperature = 20.0
+        self.heater_output = False
+        self.mixer_output = False
+
+    def read_temp(self):
+        return self.temperature
+
+    def set_heater_output(self, val: bool):
+        self.heater_output = val
+
+    def set_mixer_output(self, val: bool):
+        self.mixer_output = val
