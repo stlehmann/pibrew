@@ -140,3 +140,8 @@ class BrewController():
     @duty_cycle_s.setter
     def duty_cycle_s(self, value):
         self.settings['tempctrl']['duty_cycle_s'] = value
+
+    # heater power property
+    @property
+    def heater_power_pct(self):
+        return self.temp_controller.power

@@ -98,6 +98,11 @@ class HdwSimulator(HdwInterface):
         self.mixer_output = False
 
     def read_temp(self):
+        if self.heater_output:
+            self.temperature += 1.0
+        else:
+            if self.temperature > 20.0:
+                self.temperature -= 0.1
         return self.temperature
 
     def set_heater_output(self, val: bool):

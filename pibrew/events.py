@@ -28,3 +28,10 @@ def on_enable_mixer():
 def on_disable_mixer():
     brew_controller.mixer_enabled = False
     socketio.emit('mixer disabled')
+
+
+@socketio.on('change setpoint')
+def on_change_setpoint(data):
+    sp = float(data['value'])
+    brew_controller.temp_setpoint = sp
+    socketio.emit('setpoint changed', {'value': '{:.1f}'.format(sp)})
