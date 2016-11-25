@@ -59,7 +59,7 @@ def process_controller(interval):
         socketio.emit(
             'update',
             {
-                'time': current_time.for_json(),
+                'time': current_time.format('HH:mm:ss'),
                 'temp_setpoint': brew_controller.temp_setpoint,
                 'temp_current': brew_controller.temp_current
             }
