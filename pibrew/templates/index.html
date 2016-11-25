@@ -1,6 +1,7 @@
 {% extends 'bootstrap/base.html' %}
 
 {% block scripts %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
   <script src="https://code.jquery.com/jquery-3.1.1.js" integrity="sha256-16cdPddA6VdVInumRGo6IbivbERE8p7CQR3HzTBuELA=" crossorigin="anonymous"></script>
   <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
 
@@ -78,8 +79,8 @@
       </div>
       <div class="collapse navbar-collapse" id="navbar-collapse-1">
         <ul class="nav navbar-nav">
-          <li><button id="enableHeater" class="btn btn-default">Heizung</button></li>
-          <li><button id="enableMixer" class="btn btn-default">Rührwerk</button></li>
+          <li><button id="enableHeater" class="btn btn-default navbar-btn">Heizung</button></li>
+          <li><button id="enableMixer" class="btn btn-default navbar-btn">Rührwerk</button></li>
         </ul>
       </div>
     </div>
