@@ -46,7 +46,6 @@ def create_app(config_name=None):
         socketio.start_background_task(
             process_controller, app.config['PROCESS_INTERVAL']
         )
-
     return app
 
 
@@ -59,11 +58,12 @@ def process_controller(interval):
         socketio.emit(
             'update',
             {
-                'time': current_time.format('HH:mm:ss'),
-                'temp_setpoint': brew_controller.temp_setpoint,
-                'temp_current': brew_controller.temp_current,
-                'heater_enabled': brew_controller.heater_enabled,
-                'mixer_enabled': brew_controller.mixer_enabled
+                't': current_time.format('HH:mm:ss'),
+                'temp_sp': '{:.1f}'.format(brew_controller.temp_setpoint),
+                'temp_ct': '{:.1f}'.format(brew_controller.temp_current),
+                'ht_en': brew_controller.heater_enabled,
+                'mx_en': brew_controller.mixer_enabled,
+                'ht_pwr': '{:.1f}'.format(brew_controller.heater_power_pct)
             }
         )
         socketio.sleep(interval)

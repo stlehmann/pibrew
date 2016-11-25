@@ -17,18 +17,21 @@
 
     // Update current process data
     socket.on('update', function(data) {
-      $('#timestamp').text(data['time']);
-      $('#temp_setpoint').val(data['temp_setpoint']);
-      $('#temp_current').val(data['temp_current']);
 
-      if (data['heater_enabled']) {
+      console.log()
+
+      $('#timestamp').text(data['t']);
+      $('#temp_current').val(data['temp_ct']);
+      $('#heater_power_pct').val(data['ht_pwr']);
+
+      if (data['ht_en']) {
         $('#enableHeater').addClass('btn-primary');
       }
       else {
         $('#enableHeater').removeClass('btn-primary');
       };
 
-      if (data['mixer_enabled']) {
+      if (data['mx_en']) {
         $('#enableMixer').addClass('btn-primary');
       }
       else {
@@ -68,6 +71,15 @@
     });
     socket.on('mixer disabled', function() {
       $('#enableMixer').removeClass('btn-primary');
+    });
+
+    // set setpoint
+    $('#acceptSetpointButton').click(function() {
+      socket.emit('change setpoint', {'value': $('#temp_setpoint').val()});
+    });
+
+    socket.on('setpoint changed', function(data) {
+      $('#temp_setpoint').val(data['value']);
     });
 
   });
@@ -110,14 +122,21 @@
     </div>
     <div class="row">
       <div class="col-xs-12">
-        <form>
+        <form class="form">
           <div class="form-group">
             <label>Temperatur (Soll):</label>
-            <input class="form-control" id="temp_setpoint" value={{ temp_setpoint }}>
+            <div class="form-inline">
+              <input type="number" class="form-control" id="temp_setpoint" value={{ '{:.1f}'.format(temp_setpoint) }}>
+              <button type="submit" id="acceptSetpointButton" class="btn btn-primary">OK</button>
+            </div>
           </div>
           <div class="form-group">
             <label>Temperatur (Ist):</label>
-            <input class="form-control" id="temp_current" value={{ temp_current }}></p>
+            <input type="number" step=0.1 class="form-control" id="temp_current" disabled value={{ '{:.1f}'.format(temp_current) }}></p>
+          </div>
+          <div class="form-group">
+            <label>Heizleistung (%):</label>
+            <input type="number" step=0.1 class="form-control" id="heater_power_pct" disabled value={{ '{:.1f}'.format(heater_power_pct) }}></p>
           </div>
         </form>
       </div>
