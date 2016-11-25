@@ -16,7 +16,7 @@ background_task_running = False
 db = SQLAlchemy()
 bootstrap = Bootstrap()
 socketio = SocketIO()
-brew_controller = BrewController(
+brew_controller = BrewController.get_instance(
     bool(os.environ.get('PIBREW_SIMULATE', False))
 )
 
