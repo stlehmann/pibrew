@@ -78,3 +78,13 @@ class PiBrewTest(unittest.TestCase):
         socketio.sleep(self.process_interval)
         received = client.get_received()
         self.assertEqual('update', received[0]['name'])
+
+    def test_change_setpoint(self):
+        client = socketio.test_client(self.app)
+        client.get_received()
+
+        # change setpoint
+        client.emit('change setpoint', {'value': 99})
+        received = client.get_received()
+        self.assertEqual('setpoint changed', received[0]['name'])
+        self.assertEqual('99.0', received[0]['args'][0]['value'])
