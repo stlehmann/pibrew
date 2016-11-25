@@ -20,7 +20,7 @@ def run():
     cov.stop()
     print('')
     omit = ['manage.py', 'tests/*', 'venv/*']
-    cov.report(omit=omit)
+    cov.report(omit=omit, show_missing=True)
     cov.html_report(omit=omit)
 
     sys.exit(0 if ok else 1)

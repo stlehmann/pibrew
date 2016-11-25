@@ -1,4 +1,5 @@
 import logging
+import sys
 from datetime import datetime
 from .hardware import HdwRaspberry, HdwSimulator
 from .controllers import TempController, PWM_DC
@@ -9,7 +10,7 @@ logger = logging.getLogger(__file__)
 
 class BrewController():
     """
-    BrewController is a singleton class controlling I/O of the Raspberry Pi or
+    BrewController is controlling the I/Os of the Raspberry Pi or
     if no I/Os can be found it will simulate the signals. The singleton pattern
     is chosen because on a system there should always only be one
     BrewController to address hardware independent of the number of Flask
@@ -49,17 +50,22 @@ class BrewController():
         if self.simulate:
             self.hdw_interface = HdwSimulator()
         else:
-            try:
-                self.hdw_interface = HdwRaspberry()
-            except IOError:
-                logger.error('No temperature sensor found.'
-                             'Continuing in simulation mode.')
+            # running on linux?
+            if sys.platform == 'linux':  # pragma: no cover
+                try:
+                    self.hdw_interface = HdwRaspberry()
+                except IOError:
+                    logger.error('No temperature sensor found.'
+                                 'Continuing in simulation mode.')
+                    self.hdw_interface = HdwSimulator()
+            else:
+                logger.warning('Platform is not Linux. Continuing in '
+                               'simulation mode.')
                 self.hdw_interface = HdwSimulator()
 
     def process(self):
         # get current time to pass to the controllers
         self.now = datetime.now()
-        print(self.now)
 
         # read the current temperature
         self.temp_current = self.hdw_interface.read_temp()
@@ -89,6 +95,7 @@ class BrewController():
         # set output of the heater according to the temperature controller
         self.hdw_interface.set_heater_output(heater_output)
 
+    # temp_setpoint property
     @property
     def temp_setpoint(self):
         return self.settings['tempctrl']['setpoint']
@@ -96,3 +103,31 @@ class BrewController():
     @temp_setpoint.setter
     def temp_setpoint(self, value):
         self.settings['tempctrl']['setpoint'] = value
+
+    # manual_power_pct property
+    @property
+    def manual_power_pct(self):
+        return self.settings['tempctrl']['manual_power_pct']
+
+    @manual_power_pct.setter
+    def manual_power_pct(self, value: float):
+        self.settings['tempctrl']['manual_power_pct'] = value
+
+    # kp property
+    @property
+    def kp(self):
+        return self.settings['tempctrl']['kp']
+
+    @kp.setter
+    def kp(self, value: float):
+        self.settings['tempctrl']['kp'] = value
+
+    # tn property
+    @property
+    def tn(self):
+        return self.settings['tempctrl']['tn']
+
+    @tn.setter
+    def tn(self, value: float):
+        self.settings['tempctrl']['tn'] = value
+

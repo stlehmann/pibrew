@@ -1,4 +1,5 @@
-import datetime
+from datetime import datetime
+from utils import default_if_none
 
 
 class TempController:
@@ -29,15 +30,16 @@ class TempController:
                 temp_setpoint=None, kp=None, tn=None, manual=None,
                 manual_power_pct=None, reset=None):
 
-        self.enable = enable or self.enable
-        self.now = now or datetime.now()
-        self.temp_current = temp_current or self.temp_current
-        self.temp_setpoint = temp_setpoint or self.temp_setpoint
-        self.kp = kp or self.kp
-        self.tn = tn or self.tn
-        self.manual = manual or self.manual
-        self.manual_power_pct = manual_power_pct or self.manual_power_pct
-        self.reset = reset or self.reset
+        self.enable = default_if_none(enable, self.enable)
+        self.now = default_if_none(now, datetime.now())
+        self.temp_current = default_if_none(temp_current, self.temp_current)
+        self.temp_setpoint = default_if_none(temp_setpoint, self.temp_setpoint)
+        self.kp = default_if_none(kp, self.kp)
+        self.tn = default_if_none(tn, self.tn)
+        self.manual = default_if_none(manual, self.manual)
+        self.manual_power_pct = default_if_none(
+            manual_power_pct, self.manual_power_pct)
+        self.reset = default_if_none(reset, self.reset)
 
         if self._prev_time is not None:
             self._dt = (self.now - self._prev_time).total_seconds()
