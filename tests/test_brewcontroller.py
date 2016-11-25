@@ -8,7 +8,7 @@ class BrewControllerTestCase(unittest.TestCase):
     def setUp(self):
         self.brew_controller = BrewController(simulate=True)
 
-    def teardown(self):
+    def tearDown(self):
         pass
 
     def test_singleton(self):

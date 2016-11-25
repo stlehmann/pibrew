@@ -7,7 +7,7 @@ class UtilsTestCase(unittest.TestCase):
     def setUp(self):
         pass
 
-    def teardown(self):
+    def tearDown(self):
         pass
 
     def test_default_if_none(self):
