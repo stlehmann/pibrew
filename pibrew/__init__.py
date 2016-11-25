@@ -2,9 +2,9 @@ import os
 
 import arrow
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from flask_bootstrap import Bootstrap
 from flask_socketio import SocketIO
+from flaskext.lesscss import lesscss
 
 from config import config
 from .brewcontroller import BrewController
@@ -13,7 +13,6 @@ from .brewcontroller import BrewController
 background_task_running = False
 
 # Flask Plugins
-db = SQLAlchemy()
 bootstrap = Bootstrap()
 socketio = SocketIO()
 brew_controller = BrewController.get_instance(
@@ -32,7 +31,7 @@ def create_app(config_name=None):
     app.config.from_object(config[config_name])
 
     # init flask plugins
-    db.init_app(app)
+    lesscss(app)
     bootstrap.init_app(app)
     socketio.init_app(app)
 

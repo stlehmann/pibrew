@@ -6,4 +6,4 @@ flask
 flask-bootstrap
 flask-script
 flask-socketio
-flask-sqlalchemy
+git+https://github.com/sjl/flask-lesscss.git#egg=flask-lesscss
