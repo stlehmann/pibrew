@@ -56,6 +56,7 @@ class BrewControllerTestCase(unittest.TestCase):
     def test_integral_part(self):
         self.brew_controller.heater_enabled = True
         self.brew_controller.temp_setpoint = 120.0
+        self.brew_controller.duty_cycle_s = 0.5
         self.brew_controller.kp = 0.0
         self.brew_controller.tn = 1.0
         tc = self.brew_controller.temp_controller
@@ -82,6 +83,22 @@ class BrewControllerTestCase(unittest.TestCase):
 
         # integral part should be 0
         self.assertEqual(0.0, tc.power)
+
+    def test_duty_cycle(self):
+        self.brew_controller.heater_enabled = True
+        self.brew_controller.duty_cycle_s = 0.5
+        self.assertEqual(0.5, self.brew_controller.duty_cycle_s)
+        self.brew_controller.manual = True
+        self.brew_controller.manual_power_pct = 50.0
+
+        # output should be true at beginning of duty cycle
+        self.brew_controller.process()
+        self.assertTrue(self.brew_controller.temp_pwm.output)
+
+        # after half duty cycle output should be set to false
+        time.sleep(0.25)
+        self.brew_controller.process()
+        self.assertFalse(self.brew_controller.temp_pwm.output)
 
 
 if __name__ == '__main__':

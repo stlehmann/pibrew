@@ -94,6 +94,7 @@ class BrewController():
 
         # set output of the heater according to the temperature controller
         self.hdw_interface.set_heater_output(heater_output)
+        self.hdw_interface.set_mixer_output(self.mixer_enabled)
 
     # temp_setpoint property
     @property
@@ -131,3 +132,11 @@ class BrewController():
     def tn(self, value: float):
         self.settings['tempctrl']['tn'] = value
 
+    # duty cycle property
+    @property
+    def duty_cycle_s(self):
+        return self.settings['tempctrl']['duty_cycle_s']
+
+    @duty_cycle_s.setter
+    def duty_cycle_s(self, value):
+        self.settings['tempctrl']['duty_cycle_s'] = value

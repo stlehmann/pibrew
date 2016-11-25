@@ -3,7 +3,8 @@ import glob
 import time
 
 
-class HdwInterface:
+class HdwInterface:  # pragma: no cover
+    """ Only a common hardware interface """
 
     def __init__(self):
         pass
@@ -18,7 +19,12 @@ class HdwInterface:
         raise NotImplementedError()
 
 
-class HdwRaspberry(HdwInterface):
+class HdwRaspberry(HdwInterface):  # pragma: no cover
+    """
+    Hardware controller class for Raspberry Pi. Skip unittest on purpose
+    because hardware can not be tested on development environment.
+
+    """
 
     # Hardware configuration
     TEMPSENSOR = '28*'

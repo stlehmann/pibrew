@@ -88,3 +88,4 @@ class TempController:
             self.power = 0.0
 
         self._prev_time = now
+        return self.power

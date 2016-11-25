@@ -1,4 +1,5 @@
 from datetime import datetime
+from utils import default_if_none
 
 
 class PWM_DC:
@@ -8,26 +9,21 @@ class PWM_DC:
         self.enable = False
         self.in_pct = 0.0
         self.duty_cycle_s = 60.0
-        self.out_pct = False
+        self.output = False
 
     def process(self, now=datetime.now(), enable=None,
                 in_pct=None, duty_cycle_s=None):
 
         # set values of optional parameters
-        if enable is not None:
-            self.enable = enable
-
-        if in_pct is not None:
-            self.in_pct = in_pct
-
-        if duty_cycle_s is not None:
-            self.duty_cycle_s = duty_cycle_s
+        self.enable = default_if_none(enable, self.enable)
+        self.in_pct = default_if_none(in_pct, self.in_pct)
+        self.duty_cycle_s = default_if_none(duty_cycle_s, self.duty_cycle_s)
 
         # disable output if enable is false, if enable is set to true start
         # the duty cycle by setting _t0 to now.
         if not self.enable:
             self._t0 = None
-            self.out_pct = False
+            self.output = False
         else:
             if self._t0 is None:
                 self._t0 = now
@@ -44,6 +40,6 @@ class PWM_DC:
             # calculate the on time during the cycle according to the input
             # value
             on_time = self.in_pct / 100.0 * self.duty_cycle_s
-            self.out_pct = False if in_pct == 0 else dt <= on_time
+            self.output = False if self.in_pct == 0 else dt <= on_time
 
-        return self.out_pct
+        return self.output
