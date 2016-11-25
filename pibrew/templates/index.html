@@ -7,22 +7,36 @@
 
   <script>
   $(document).ready(function() {
+    // Establish socketio connection
     var socket = io.connect('http://' + document.domain + ':' + location.port);
 
+    // Test event to query if connection ok
     socket.on('connect', function() {
         socket.emit('my event', {data: 'I\'m connected!'});
     });
 
+    // Update current process data
     socket.on('update', function(data) {
-      var current_time = data['time'];
-      var temp_setpoint = data['temp_setpoint'];
-      var temp_current = data['temp_current'];
+      $('#timestamp').text(data['time']);
+      $('#temp_setpoint').val(data['temp_setpoint']);
+      $('#temp_current').val(data['temp_current']);
 
-      $('#timestamp').text(current_time);
-      $('#temp_setpoint').text(temp_setpoint);
-      $('#temp_current').text(temp_current);
+      if (data['heater_enabled']) {
+        $('#enableHeater').addClass('btn-primary');
+      }
+      else {
+        $('#enableHeater').removeClass('btn-primary');
+      };
+
+      if (data['mixer_enabled']) {
+        $('#enableMixer').addClass('btn-primary');
+      }
+      else {
+        $('#enableMixer').removeClass('btn-primary');
+      }
     });
 
+    // Enable / Disable Heater state
     {# change heater state #}
     $('#enableHeater').click(function() {
       if ($(this).hasClass('btn-primary')) {
@@ -32,15 +46,14 @@
         socket.emit('enable heater');
       }
     });
-
     socket.on('heater enabled', function() {
       $('#enableHeater').addClass('btn-primary');
     });
-
     socket.on('heater disabled', function() {
       $('#enableHeater').removeClass('btn-primary');
     })
 
+    // Enable / Disabe mixer state
     {# change mixer sate #}
     $('#enableMixer').click(function() {
       if ($(this).hasClass('btn-primary')) {
@@ -50,14 +63,13 @@
         socket.emit('enable mixer');
       }
     })
-
     socket.on('mixer enabled', function() {
       $('#enableMixer').addClass('btn-primary')
     });
-
     socket.on('mixer disabled', function() {
       $('#enableMixer').removeClass('btn-primary');
     });
+
   });
   </script>
   {{  super() }}
@@ -79,8 +91,8 @@
       </div>
       <div class="collapse navbar-collapse" id="navbar-collapse-1">
         <ul class="nav navbar-nav">
-          <li><button id="enableHeater" class="btn btn-default navbar-btn">Heizung</button></li>
-          <li><button id="enableMixer" class="btn btn-default navbar-btn">Rührwerk</button></li>
+          <li><button id="enableHeater" class="btn btn-default navbar-btn{% if heater_enabled %} btn-primary{% endif %}">Heizung</button></li>
+          <li><button id="enableMixer" class="btn btn-default navbar-btn{% if mixer_enabled %} btn-primary{% endif %}">Rührwerk</button></li>
         </ul>
         <ul class="nav navbar-nav navbar-right">
           <p class="navbar-text" id="timestamp"></p>
@@ -98,8 +110,16 @@
     </div>
     <div class="row">
       <div class="col-xs-12">
-        <p id="temp_setpoint"></p>
-        <p id="temp_current"></p>
+        <form>
+          <div class="form-group">
+            <label>Temperatur (Soll):</label>
+            <input class="form-control" id="temp_setpoint" value={{ temp_setpoint }}>
+          </div>
+          <div class="form-group">
+            <label>Temperatur (Ist):</label>
+            <input class="form-control" id="temp_current" value={{ temp_current }}></p>
+          </div>
+        </form>
       </div>
     </div>
   </div>

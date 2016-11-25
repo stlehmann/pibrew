@@ -61,7 +61,9 @@ def process_controller(interval):
             {
                 'time': current_time.format('HH:mm:ss'),
                 'temp_setpoint': brew_controller.temp_setpoint,
-                'temp_current': brew_controller.temp_current
+                'temp_current': brew_controller.temp_current,
+                'heater_enabled': brew_controller.heater_enabled,
+                'mixer_enabled': brew_controller.mixer_enabled
             }
         )
         socketio.sleep(interval)
