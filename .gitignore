@@ -94,3 +94,4 @@ ENV/
 /pibrew/static/bower_components/
 .idea/
 styles.css
+*.sqlite

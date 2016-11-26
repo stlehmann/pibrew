@@ -7,14 +7,14 @@ from flask_socketio import SocketIO
 from flaskext.lesscss import lesscss
 
 from config import config
-from .brewcontroller import BrewController
-
 
 background_task_running = False
 
 # Flask Plugins
 bootstrap = Bootstrap()
 socketio = SocketIO()
+
+from .brewcontroller import BrewController
 brew_controller = BrewController.get_instance(
     bool(os.environ.get('PIBREW_SIMULATE', False))
 )

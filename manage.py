@@ -1,20 +1,25 @@
 #!/usr/bin/env python
 import os
-import subprocess
 import sys
+import subprocess
+
+# import eventlet and monkey patch threading native objects so they
+# work with eventlet
 import eventlet
+eventlet.monkey_patch()
+
 from flask_script import Manager
-from pibrew import create_app, socketio, brew_controller
+from pibrew import create_app, socketio
 
 
+os.environ['PIBREW_DB_FILENAME'] = 'pibrew.sqlite'
 manager = Manager(create_app)
 
 
 @manager.command
 def run():
-    eventlet.monkey_patch()
     app = create_app()
-    socketio.run(app, host='localhost', port=5000, )
+    socketio.run(app, host='localhost', port=5000)
 
 
 @manager.command
