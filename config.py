@@ -6,6 +6,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 class Config(object):
     DEBUG = False
     TESTING = False
+    SIMULATE = False
     SECRET_KEY = os.environ.get('SECRET_KEY',
                                 '9844f8c4eebfc08ed88cd3d64f201db3')
     PROCESS_INTERVAL = 1.0  # interval for brew controller processing
@@ -25,6 +26,7 @@ class TestingConfig(Config):
     DATABASE_FILENAME = 'pibrew-test.sqlite'
     TESTING = True
     PROCESS_INTERVAL = 0.1  # interval for brew controller processing
+    SIMULATE = True
 
 
 config = {

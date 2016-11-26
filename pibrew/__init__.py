@@ -7,18 +7,13 @@ from flask_socketio import SocketIO
 from flaskext.lesscss import lesscss
 
 from config import config
+from .brewcontroller import BrewController
 
-background_task_running = False
 
 # Flask Plugins
 bootstrap = Bootstrap()
 socketio = SocketIO()
-
-from .brewcontroller import BrewController
-brew_controller = BrewController.get_instance(
-    bool(os.environ.get('PIBREW_SIMULATE', False))
-)
-
+brew_controller = BrewController()
 
 from . import events # noqa
 
@@ -39,10 +34,10 @@ def create_app(config_name=None):
     from .main import main as main_blueprint
     app.register_blueprint(main_blueprint, url_prefix='/')
 
-    # start the background task only once even if there are more then one app
-    global background_task_running
-    if not background_task_running:
-        background_task_running = True
+    # init the brew controller and start the background task if none
+    # exists yet
+    if not brew_controller.initialized:
+        brew_controller.init_app(app.config['SIMULATE'])
         socketio.start_background_task(
             process_controller, app.config['PROCESS_INTERVAL']
         )

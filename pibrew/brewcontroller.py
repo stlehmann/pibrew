@@ -25,7 +25,10 @@ class BrewController():
             cls._instance = cls(*args, **kwargs)
         return cls._instance
 
-    def __init__(self, simulate=False):
+    def __init__(self):
+        self.initialized = False
+
+    def init_app(self, simulate=False):
         self.simulate = simulate
 
         self.temp_controller = TempController()

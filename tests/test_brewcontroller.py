@@ -6,7 +6,8 @@ from pibrew.brewcontroller import BrewController
 class BrewControllerTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.brew_controller = BrewController(simulate=True)
+        self.brew_controller = BrewController()
+        self.brew_controller.init_app(simulate=True)
 
     def tearDown(self):
         pass
