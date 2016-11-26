@@ -88,27 +88,21 @@
 {% endblock %}
 
 {% block navbar %}
-  <div class="navbar navbar-default">
+  <div class="navbar navbar-default navbar-fixed-top">
     <div class="container-fluid">
       <div class="navbar-header">
-        <button type="button" class="navbar-toggle collapsed"
-         data-toggle="collapse" data-target="#navbar-collapse-1"
-         aria-expanded="false">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbarCollapse" aria-expanded="false">
           <span class="sr-only">Toggle navigation</span>
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
         </button>
-        <a class="navbar-brand" href="#">PiBrew</a>
+        <a class="navbar-brand"><img src="{{ url_for('static', filename='logo.png') }}"></a>
       </div>
-      <div class="collapse navbar-collapse" id="navbar-collapse-1">
-        <ul class="nav navbar-nav">
-          <li><button id="enableHeater" class="btn btn-default navbar-btn{% if heater_enabled %} btn-primary{% endif %}">Heizung</button></li>
-          <li><button id="enableMixer" class="btn btn-default navbar-btn{% if mixer_enabled %} btn-primary{% endif %}">Rührwerk</button></li>
-        </ul>
-        <ul class="nav navbar-nav navbar-right">
-          <p class="navbar-text" id="timestamp"></p>
-        </ul>
+      <div class="collapse navbar-collapse" id="navbarCollapse">
+        <button id="enableHeater" class="btn btn-default navbar-btn{% if heater_enabled %} btn-primary{% endif %}">Heizung</button>
+        <button id="enableMixer" class="btn btn-default navbar-btn{% if mixer_enabled %} btn-primary{% endif %}">Rührwerk</button>
+        <p class="navbar-text pull-right" id="timestamp" style="display: inline;"></p>
       </div>
     </div>
   </div>
@@ -125,9 +119,11 @@
         <form class="form">
           <div class="form-group">
             <label>Temperatur (Soll):</label>
-            <div class="form-inline">
+            <div class="input-group">
               <input type="number" class="form-control" id="temp_setpoint" value={{ '{:.1f}'.format(temp_setpoint) }}>
-              <button type="submit" id="acceptSetpointButton" class="btn btn-primary">OK</button>
+              <span class="input-group-btn">
+                <button type="submit" id="acceptSetpointButton" class="btn btn-primary">OK</button>
+              </span>
             </div>
           </div>
           <div class="form-group">
