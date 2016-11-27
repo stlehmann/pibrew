@@ -12,7 +12,6 @@ from flask_script import Manager
 from pibrew import create_app, socketio
 
 
-os.environ['PIBREW_DB_FILENAME'] = 'pibrew.sqlite'
 manager = Manager(create_app)
 
 

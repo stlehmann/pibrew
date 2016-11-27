@@ -1,13 +1,14 @@
 import time
 import unittest
 from pibrew.brewcontroller import BrewController
+from pibrew import create_app
 
 
 class BrewControllerTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.brew_controller = BrewController()
-        self.brew_controller.init_app(simulate=True)
+        app = create_app('testing')
+        self.brew_controller = BrewController(app)
 
     def tearDown(self):
         pass

@@ -1,5 +1,6 @@
 import os
-
+import time
+import threading
 import arrow
 from flask import Flask
 from flask_bootstrap import Bootstrap
@@ -9,6 +10,7 @@ from flaskext.lesscss import lesscss
 from config import config
 from .brewcontroller import BrewController
 
+background_thread = threading.Thread()
 
 # Flask Plugins
 bootstrap = Bootstrap()
@@ -37,10 +39,14 @@ def create_app(config_name=None):
     # init the brew controller and start the background task if none
     # exists yet
     if not brew_controller.initialized:
-        brew_controller.init_app(app.config['SIMULATE'])
-        socketio.start_background_task(
-            process_controller, app.config['PROCESS_INTERVAL']
+        brew_controller.init_app(app)
+
+        background_thread = threading.Thread(
+            target=process_controller, args=[app.config['PROCESS_INTERVAL']],
+            daemon=True
         )
+        background_thread.start()
+
     return app
 
 
@@ -61,4 +67,4 @@ def process_controller(interval):
                 'ht_pwr': '{:.1f}'.format(brew_controller.heater_power_pct)
             }
         )
-        socketio.sleep(interval)
+        time.sleep(interval)

@@ -25,11 +25,18 @@ class BrewController():
             cls._instance = cls(*args, **kwargs)
         return cls._instance
 
-    def __init__(self):
+    def __init__(self, app=None):
         self.initialized = False
+        if app is not None:
+            self.init_app(app)
 
-    def init_app(self, simulate=False):
-        self.simulate = simulate
+    def init_app(self, app):
+        if self.initialized:
+            raise RuntimeError('BrewController can only be initialized once.')
+
+        self.initialized = True
+        self.simulate = app.config['SIMULATE']
+        self.db_filename = app.config['DATABASE_FILENAME']
 
         self.temp_controller = TempController()
         self.temp_pwm = PWM_DC()
@@ -42,7 +49,7 @@ class BrewController():
         self.reset = False
 
         # load settings and set to default values if none exist
-        self.settings = SqliteDict('pibrew.sqlite', 'settings',
+        self.settings = SqliteDict(self.db_filename, 'settings',
                                    autocommit=True)
         self.settings.setdefault('temp_setpoint', 50.0)
         self.settings.setdefault('kp', 10.0)

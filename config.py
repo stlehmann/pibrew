@@ -25,8 +25,8 @@ class ProductionConfig(Config):
 class TestingConfig(Config):
     DATABASE_FILENAME = 'pibrew-test.sqlite'
     TESTING = True
-    PROCESS_INTERVAL = 0.1  # interval for brew controller processing
     SIMULATE = True
+    PROCESS_INTERVAL = 0.1  # interval for brew controller processing
 
 
 config = {
