@@ -4,21 +4,113 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
   <script src="https://code.jquery.com/jquery-3.1.1.js" integrity="sha256-16cdPddA6VdVInumRGo6IbivbERE8p7CQR3HzTBuELA=" crossorigin="anonymous"></script>
   <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+  <script src="{{ url_for('static', filename='bower_components/plotlyjs/plotly.js') }}"></script>
 
   <script>
+  var data_setpoint = {name: 'Sollwert[°C]', type: 'scatter', x: [], y: [] };
+  var data_temp = {name: 'Temperatur [°C]', type: 'scatter', x: [], y: [] };
+  var data_pwr = {name: 'Leistung [%]', type: 'scatter', x:[], y:[] };
+
+  var layout_lg = {
+    margin: {
+        l: 60,
+        r: 0,
+        b: 50,
+        t: 0,
+        pad: 4
+    },
+    height: 400,
+    yaxis: {
+      title: '°C',
+      range: [0, 100]
+    },
+    legend: {
+      x: 0.02,
+      y: 1.02,
+      traceorder: 'normal',
+      font: {
+        family: 'sans-serif',
+        size: 12,
+        color: '#000'
+      },
+      bordercolor: '#FFFFFF',
+      borderwidth: 2
+    }
+  };
+
+  var layout_sm = {
+    margin: {
+      l: 30,
+      r: 0,
+      b: 20,
+      t: 0,
+      pad: 4
+    },
+    height: 200,
+    yaxis: {
+      title: '',
+      range: [0, 100]
+    },
+    legend: {
+      x: 0.02,
+      y: 1.02,
+      traceorder: 'normal',
+      font: {
+        family: 'sans-serif',
+        size: 12,
+        color: '#000'
+      },
+      bordercolor: '#FFFFFF',
+      borderwidth: 2
+    }
+  };
+  var layout = layout_lg;
+
   $(document).ready(function() {
+
+    // ----------------------------------------------
+    // Plotly initialization
+    // ----------------------------------------------
+
+    var chart = $('#chart').get(0);
+
+    if (window.innerWidth <= 767) {
+      layout = layout_sm;
+    }
+    else {
+      layout = layout_lg;
+    };
+
+    Plotly.plot(
+      chart,
+      [data_setpoint, data_temp, data_pwr],
+      layout,
+      {
+        displayModeBar: false,
+        staticPlot: true
+      }
+    );
+
+    $(window).resize(function() {
+      Plotly.Plots.resize(chart);
+    });
+
+    // ----------------------------------------------
+    // SocketIO event handling
+    // ----------------------------------------------
+
     // Establish socketio connection
     var socket = io.connect('http://' + document.domain + ':' + location.port);
 
     // Test event to query if connection ok
+
     socket.on('connect', function() {
         socket.emit('my event', {data: 'I\'m connected!'});
     });
 
     // Update current process data
-    socket.on('update', function(data) {
 
-      console.log()
+    socket.on('update', function(data) {
 
       $('#timestamp').text(data['t']);
       $('#temp_current').val(data['temp_ct']);
@@ -37,10 +129,28 @@
       else {
         $('#enableMixer').removeClass('btn-primary');
       }
+
+      // add temperature data point
+
+      data_temp.x.push(data['t']);
+      data_temp.y.push(data['temp_ct']);
+
+      // add setpoint data point
+
+      data_setpoint.x.push(data['t']);
+      data_setpoint.y.push(data['temp_sp']);
+
+      // add setpoint data point
+
+      data_pwr.x.push(data['t']);
+      data_pwr.y.push(data['ht_pwr']);
+
+      Plotly.redraw(chart);
+
     });
 
     // Enable / Disable Heater state
-    {# change heater state #}
+
     $('#enableHeater').click(function() {
       if ($(this).hasClass('btn-primary')) {
         socket.emit('disable heater');
@@ -49,15 +159,17 @@
         socket.emit('enable heater');
       }
     });
+
     socket.on('heater enabled', function() {
       $('#enableHeater').addClass('btn-primary');
     });
+
     socket.on('heater disabled', function() {
       $('#enableHeater').removeClass('btn-primary');
     })
 
     // Enable / Disabe mixer state
-    {# change mixer sate #}
+
     $('#enableMixer').click(function() {
       if ($(this).hasClass('btn-primary')) {
         socket.emit('disable mixer');
@@ -66,14 +178,17 @@
         socket.emit('enable mixer');
       }
     })
+
     socket.on('mixer enabled', function() {
       $('#enableMixer').addClass('btn-primary')
     });
+
     socket.on('mixer disabled', function() {
       $('#enableMixer').removeClass('btn-primary');
     });
 
     // set setpoint
+
     $('#acceptSetpointButton').click(function() {
       socket.emit('change setpoint', {'value': $('#temp_setpoint').val()});
     });
@@ -81,10 +196,11 @@
     socket.on('setpoint changed', function(data) {
       $('#temp_setpoint').val(data['value']);
     });
-
   });
   </script>
+
   {{  super() }}
+
 {% endblock %}
 
 {% block navbar %}
@@ -135,6 +251,11 @@
             <input type="number" step=0.1 class="form-control" id="heater_power_pct" disabled value={{ '{:.1f}'.format(heater_power_pct) }}></p>
           </div>
         </form>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-12">
+        <div id="chart"></div>
       </div>
     </div>
   </div>

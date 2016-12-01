@@ -17,7 +17,7 @@ bootstrap = Bootstrap()
 socketio = SocketIO()
 brew_controller = BrewController()
 
-from . import events # noqa
+from . import events  # noqa
 
 
 def create_app(config_name=None):
