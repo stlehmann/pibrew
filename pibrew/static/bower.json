@@ -16,6 +16,9 @@
     "tests"
   ],
   "dependencies": {
-    "socket.io": "^1.6.0"
+    "socket.io": "^1.6.0",
+    "plotlyjs": "plotly#^1.18.1",
+    "jquery": "^3.1.1",
+    "bootstrap-css": "^3.3.6"
   }
 }
