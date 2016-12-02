@@ -154,3 +154,9 @@ class BrewController():
     @property
     def heater_power_pct(self):
         return self.temp_controller.power
+
+    # heater on property
+    @property
+    def heater_on(self):
+        """ True if the heater is currently powered """
+        return self.temp_pwm.output
