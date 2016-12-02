@@ -7,16 +7,29 @@ from pibrew import create_app
 class BrewControllerTestCase(unittest.TestCase):
 
     def setUp(self):
-        app = create_app('testing')
-        self.brew_controller = BrewController(app)
+        self.app = create_app('testing')
+        self.ctx = self.app.app_context()
+        self.ctx.push()
+
+        self.brew_controller = BrewController(self.app)
 
     def tearDown(self):
-        pass
+        self.ctx.pop()
 
     def test_singleton(self):
         bc1 = BrewController.get_instance()
         bc2 = BrewController.get_instance()
         self.assertIs(bc1, bc2)
+
+        # Allow initializing only once
+        bc1.init_app(self.app)
+        with self.assertRaises(RuntimeError):
+            bc2.init_app(self.app)
+
+    def test_os_simulation(self):
+        self.app.config['SIMULATE'] = False
+        bc = BrewController(self.app)
+        self.assertEqual('HdwSimulator', bc.hdw_interface.__class__.__name__)
 
     def test_enable_heater(self):
         self.brew_controller.heater_enabled = True

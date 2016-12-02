@@ -44,7 +44,7 @@ def create_app(config_name=None):
 
         background_thread = threading.Thread(
             target=process_controller,
-            args=[app.config['PROCESS_INTERVAL'], app.config['DATA_FILENAME']],
+            args=[app.config['PROCESS_INTERVAL']],
             daemon=True
         )
         background_thread.start()
@@ -52,7 +52,7 @@ def create_app(config_name=None):
     return app
 
 
-def process_controller(interval, filename):
+def process_controller(interval):
 
     while(1):
 
