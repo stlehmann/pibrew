@@ -7,15 +7,15 @@
   <script src="{{ url_for('static', filename='bower_components/plotlyjs/plotly.js') }}"></script>
 
   <script>
-  var data_setpoint = {name: 'Sollwert[°C]', type: 'scatter', x: [], y: [] };
-  var data_temp = {name: 'Temperatur [°C]', type: 'scatter', x: [], y: [] };
-  var data_pwr = {name: 'Leistung [%]', type: 'scatter', x:[], y:[] };
+  var data_setpoint = {name: 'Sollwert[°C]', type: 'scatter', x: {{ pd['t'] | safe }}, y: {{ pd['temp_sp'] | safe }} };
+  var data_temp = {name: 'Temperatur [°C]', type: 'scatter', x: {{ pd['t'] | safe }}, y: {{ pd['temp_ct'] | safe }} };
+  var data_pwr = {name: 'Leistung [%]', type: 'scatter', x: {{ pd['t'] | safe }}, y: {{ pd['ht_pwr'] | safe }} };
 
   var layout_lg = {
     margin: {
         l: 60,
         r: 0,
-        b: 50,
+        b: 100,
         t: 0,
         pad: 4
     },
@@ -42,11 +42,11 @@
     margin: {
       l: 30,
       r: 0,
-      b: 20,
+      b: 80,
       t: 0,
       pad: 4
     },
-    height: 200,
+    height: 300,
     yaxis: {
       title: '',
       range: [0, 100]
@@ -116,6 +116,13 @@
       $('#temp_current').val(data['temp_ct']);
       $('#heater_power_pct').val(data['ht_pwr']);
 
+      if (data['ht_on']) {
+        $('#heaterStateLight').css('background-color', 'red');
+      }
+      else {
+        $('#heaterStateLight').css('background-color', 'darkgray');
+      }
+
       if (data['ht_en']) {
         $('#enableHeater').addClass('btn-primary');
       }
@@ -131,17 +138,14 @@
       }
 
       // add temperature data point
-
       data_temp.x.push(data['t']);
       data_temp.y.push(data['temp_ct']);
 
       // add setpoint data point
-
       data_setpoint.x.push(data['t']);
       data_setpoint.y.push(data['temp_sp']);
 
       // add setpoint data point
-
       data_pwr.x.push(data['t']);
       data_pwr.y.push(data['ht_pwr']);
 
@@ -150,7 +154,6 @@
     });
 
     // Enable / Disable Heater state
-
     $('#enableHeater').click(function() {
       if ($(this).hasClass('btn-primary')) {
         socket.emit('disable heater');
@@ -169,7 +172,6 @@
     })
 
     // Enable / Disabe mixer state
-
     $('#enableMixer').click(function() {
       if ($(this).hasClass('btn-primary')) {
         socket.emit('disable mixer');
@@ -188,8 +190,7 @@
     });
 
     // set setpoint
-
-    $('#acceptSetpointButton').click(function() {
+    $('#acceptSetpointButton').click(function(event) {
       socket.emit('change setpoint', {'value': $('#temp_setpoint').val()});
     });
 
@@ -231,12 +232,18 @@
       </div>
     </div>
     <div class="row">
-      <div class="col-xs-12">
+      <div class="col-sm-4">
+        <div class="visu-container">
+          <img id="pot" src="{{ url_for('static', filename='einkocher.jpg') }}">
+          <div id="heaterStateLight"></div>
+        </div>
+      </div>
+      <div class="col-sm-8">
         <form class="form">
           <div class="form-group">
             <label>Temperatur (Soll):</label>
             <div class="input-group">
-              <input type="number" class="form-control" id="temp_setpoint" value={{ '{:.1f}'.format(temp_setpoint) }}>
+              <input type="number" class="form-control" id="temp_setpoint" value={{ '{:.1f}'.format(temp_setpoint) }} min=0 max=100>
               <span class="input-group-btn">
                 <button type="submit" id="acceptSetpointButton" class="btn btn-primary">OK</button>
               </span>
