@@ -53,14 +53,16 @@ def create_app(config_name=None):
 
 
 def process_controller(interval):
+    count = 0
 
     while(1):
+        count += 1
 
         current_time = arrow.now()
         brew_controller.process()
 
         data = {
-            't': current_time.format('HH:mm:ss'),
+            't': current_time.format('YYYY-MM-DD HH:mm:ss'),
             'temp_sp': '{:.1f}'.format(brew_controller.temp_setpoint),
             'temp_ct': '{:.1f}'.format(brew_controller.temp_current),
             'ht_en': brew_controller.heater_enabled,
@@ -69,10 +71,13 @@ def process_controller(interval):
             'ht_on': brew_controller.heater_on,
         }
 
-        process_data['t'].append(data['t'])
-        process_data['temp_sp'].append(data['temp_sp'])
-        process_data['temp_ct'].append(data['temp_ct'])
-        process_data['ht_pwr'].append(data['ht_pwr'])
+        # Only save every tenth value
+        if count == 10:
+            process_data['t'].append(data['t'])
+            process_data['temp_sp'].append(data['temp_sp'])
+            process_data['temp_ct'].append(data['temp_ct'])
+            process_data['ht_pwr'].append(data['ht_pwr'])
+            count = 0
 
         socketio.emit('update', data)
         time.sleep(interval)
