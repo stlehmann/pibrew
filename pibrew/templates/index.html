@@ -2,9 +2,15 @@
 
 {% block scripts %}
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-  <script src="https://code.jquery.com/jquery-3.1.1.js" integrity="sha256-16cdPddA6VdVInumRGo6IbivbERE8p7CQR3HzTBuELA=" crossorigin="anonymous"></script>
-  <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='bower_components/jqwidgets/jqwidgets/styles/jqx.base.css') }}">
+
+  <script src="{{ url_for('static', filename='bower_components/jquery/dist/jquery.js') }}"></script>
+  <script src="{{ url_for('static', filename='bower_components/socket.io-client/dist/socket.io.js') }}"></script>
   <script src="{{ url_for('static', filename='bower_components/plotlyjs/plotly.js') }}"></script>
+
+  <script src="{{ url_for('static', filename='bower_components/jqwidgets/jqwidgets/jqxcore.js') }}"></script>
+  <script src="{{ url_for('static', filename='bower_components/jqwidgets/jqwidgets/jqxchart.js') }}"></script>
+  <script src="{{ url_for('static', filename='bower_components/jqwidgets/jqwidgets/jqxgauge.js') }}"></script>
 
   <script>
   var data_setpoint = {name: 'Sollwert[°C]', type: 'scatter', x: {{ pd['t'] | safe }}, y: {{ pd['temp_sp'] | safe }} };
@@ -71,6 +77,34 @@
     // ----------------------------------------------
     // Plotly initialization
     // ----------------------------------------------
+    // gauge init
+    jqxLinearGauge($('#gauge'), {
+        max: 100,
+        min: 0,
+        background: { visible: false},
+        pointer: { size: '5%' },
+        colorScheme: 'scheme03',
+        ticksMajor: { size: '10%', interval: 10 },
+        ticksMinor: { size: '5%', interval: 2.5, style: { 'stroke-width': 1, stroke: '#aaaaaa'} },
+        value: 0,
+        width: 70,
+        height: 200,
+        labels: { interval: 10, formatValue: function (value, position) {
+          if (position === 'far') {
+              return value;
+          }
+          else if (position === 'near') {
+            if (value == 100) {
+                return '°C';
+            }
+          }
+        },
+        ranges: [
+          { startValue: 20, endValue: 45, style: { fill: '#FFA200', stroke: '#FFA200' }}
+        ],
+        showRanges: true
+      }
+    });
 
     var chart = $('#chart').get(0);
 
@@ -149,7 +183,11 @@
       data_pwr.x.push(data['t']);
       data_pwr.y.push(data['ht_pwr']);
 
+      // Refresh plot
       Plotly.redraw(chart);
+
+      // Refresh Gauge
+      jqxLinearGauge($('#gauge'), {'value': data['temp_ct']});
 
     });
 
@@ -236,6 +274,7 @@
         <div class="visu-container">
           <img id="pot" src="{{ url_for('static', filename='einkocher.jpg') }}">
           <div id="heaterStateLight"></div>
+          <div id="gauge"></div>
         </div>
       </div>
       <div class="col-sm-8">
