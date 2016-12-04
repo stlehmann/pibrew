@@ -1,6 +1,7 @@
 import os
 import time
 import threading
+import logging
 import arrow
 from flask import Flask
 from flask_bootstrap import Bootstrap
@@ -9,6 +10,10 @@ from flaskext.lesscss import lesscss
 
 from config import config
 from .brewcontroller import BrewController
+
+
+logger = logging.getLogger(__name__)
+
 
 background_thread = threading.Thread()
 
@@ -24,9 +29,19 @@ from . import events  # noqa
 def create_app(config_name=None):
     app = Flask(__name__)
 
+    # load config
     if config_name is None:
         config_name = os.environ.get('PIBREW_CONFIG', 'development')
     app.config.from_object(config[config_name])
+
+    # init logger
+    app.logger.setLevel(app.config['LOG_LEVEL'])
+    stream_handler = logging.StreamHandler()
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    stream_handler.setFormatter(formatter)
+    app.logger.addHandler(stream_handler)
+
+    app.logger.info('started application')
 
     # init flask plugins
     lesscss(app)
