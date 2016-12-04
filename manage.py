@@ -17,7 +17,7 @@ manager = Manager(create_app)
 @manager.command
 def run():
     app = create_app('development')
-    socketio.run(app, host='0.0.0.0', port=5000, use_reloader=False)
+    socketio.run(app, host='0.0.0.0', port=5000, use_reloader=True)
 
 
 @manager.command

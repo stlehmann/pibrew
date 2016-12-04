@@ -52,18 +52,20 @@ def create_app(config_name=None):
     from .main import main as main_blueprint
     app.register_blueprint(main_blueprint, url_prefix='/')
 
-    # init the brew controller and start the background task if none
-    # exists yet
-    if not brew_controller.initialized:
-        brew_controller.init_app(app)
+    @app.before_first_request
+    def init_brew_controller():
+        # init the brew controller and start the background task if none
+        # exists yet
+        if not brew_controller.initialized:
+            brew_controller.init_app(app)
 
-        background_thread = threading.Thread(
-            target=process_controller,
-            args=[app.config['PROCESS_INTERVAL']],
-            daemon=True
-        )
-        background_thread.start()
-        app.logger.info('started background thread')
+            background_thread = threading.Thread(
+                target=process_controller,
+                args=[app.config['PROCESS_INTERVAL']],
+                daemon=True
+            )
+            background_thread.start()
+            app.logger.info('started background thread')
 
     return app
 
