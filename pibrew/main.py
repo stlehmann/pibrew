@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template
-from . import brew_controller, process_data
+from . import brew_controller
 
 
 main = Blueprint('main', __name__)
@@ -15,5 +15,4 @@ def index():
         heater_enabled=brew_controller.heater_enabled,
         mixer_enabled=brew_controller.mixer_enabled,
         heater_power_pct=brew_controller.heater_power_pct,
-        pd=process_data
     )

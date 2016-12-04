@@ -1,4 +1,7 @@
-from . import socketio, brew_controller
+import logging
+from . import socketio, brew_controller, process_data
+
+logger = logging.getLogger(__name__)
 
 
 @socketio.on('connect')
@@ -35,3 +38,9 @@ def on_change_setpoint(data):
     sp = float(data['value'])
     brew_controller.temp_setpoint = sp
     socketio.emit('setpoint changed', {'value': '{:.1f}'.format(sp)})
+
+
+@socketio.on('load data')
+def on_load_data():
+    logger.debug('Socket: init data')
+    socketio.emit('init data', process_data)

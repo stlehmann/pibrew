@@ -13,9 +13,10 @@
   <script src="{{ url_for('static', filename='bower_components/jqwidgets/jqwidgets/jqxgauge.js') }}"></script>
 
   <script>
-  var data_setpoint = {name: 'Sollwert[°C]', type: 'scatter', x: {{ pd['t'] | safe }}, y: {{ pd['temp_sp'] | safe }} };
-  var data_temp = {name: 'Temperatur [°C]', type: 'scatter', x: {{ pd['t'] | safe }}, y: {{ pd['temp_ct'] | safe }} };
-  var data_pwr = {name: 'Leistung [%]', type: 'scatter', x: {{ pd['t'] | safe }}, y: {{ pd['ht_pwr'] | safe }} };
+  var data_setpoint = {name: 'Sollwert[°C]', type: 'scatter', x: [], y: []};
+  var data_temp = {name: 'Temperatur [°C]', type: 'scatter', x: [], y:[]};
+  var data_pwr = {name: 'Leistung [%]', type: 'scatter', x: [], y: []};
+  var loading = false;
 
   var layout_lg = {
     margin: {
@@ -137,13 +138,26 @@
     var socket = io.connect('http://' + document.domain + ':' + location.port);
 
     // Test event to query if connection ok
-
     socket.on('connect', function() {
-        socket.emit('my event', {data: 'I\'m connected!'});
+      loading = true;
+      socket.emit('load data');
+    });
+
+    // load init data
+    socket.on('init data', function(data) {
+      // current temperature
+      data_temp['x'] = data['t'].slice();
+      data_temp['y'] = data['temp_ct'].slice();
+      // temperature setpoint
+      data_setpoint['x'] = data['t'].slice();
+      data_setpoint['y'] = data['temp_sp'].slice();
+      // heating power
+      data_pwr['x'] = data['t'].slice();
+      data_pwr['y'] = data['ht_pwr'].slice();
+      loading = false;
     });
 
     // Update current process data
-
     socket.on('update', function(data) {
 
       $('#timestamp').text(data['t']);
@@ -171,20 +185,23 @@
         $('#enableMixer').removeClass('btn-primary');
       }
 
-      // add temperature data point
-      data_temp.x.push(data['t']);
-      data_temp.y.push(data['temp_ct']);
+      console.log(data);
+      if (!loading) {
+        // add temperature data point
+        data_temp.x.push(data['t']);
+        data_temp.y.push(data['temp_ct']);
 
-      // add setpoint data point
-      data_setpoint.x.push(data['t']);
-      data_setpoint.y.push(data['temp_sp']);
+        // add setpoint data point
+        data_setpoint.x.push(data['t']);
+        data_setpoint.y.push(data['temp_sp']);
 
-      // add setpoint data point
-      data_pwr.x.push(data['t']);
-      data_pwr.y.push(data['ht_pwr']);
+        // add setpoint data point
+        data_pwr.x.push(data['t']);
+        data_pwr.y.push(data['ht_pwr']);
 
-      // Refresh plot
-      Plotly.redraw(chart);
+        // Refresh plot
+        Plotly.redraw(chart);
+      }
 
       // Refresh Gauge
       jqxLinearGauge($('#gauge'), {'value': data['temp_ct']});
