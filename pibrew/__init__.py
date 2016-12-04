@@ -31,7 +31,7 @@ def create_app(config_name=None):
 
     # load config
     if config_name is None:
-        config_name = os.environ.get('PIBREW_CONFIG', 'development')
+        config_name = os.environ.get('FLASK_CONFIG', 'development')
     app.config.from_object(config[config_name])
 
     # init logger
