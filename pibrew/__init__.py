@@ -91,6 +91,5 @@ def process_controller(interval):
         process_data['temp_ct'].append(data['temp_ct'])
         process_data['ht_pwr'].append(data['ht_pwr'])
 
-        logger.debug(process_data['t'][-1])
         socketio.emit('update', data)
         time.sleep(interval)
