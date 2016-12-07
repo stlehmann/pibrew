@@ -1,5 +1,4 @@
 import unittest
-
 from pibrew import create_app, socketio, brew_controller
 
 
@@ -9,13 +8,15 @@ class PiBrewTest(unittest.TestCase):
         self.app = create_app('testing')
         self.client = self.app.test_client()
         self.process_interval = self.app.config['PROCESS_INTERVAL']
+        self.client.get('/')
 
     def tearDown(self):
         pass
 
     def test_default_config(self):
         self.app = create_app()
-        self.assertTrue(self.app.config['DEBUG'])
+        self.assertFalse(self.app.config['TESTING'])
+        self.assertFalse(self.app.config['SIMULATE'])
 
     def test_index(self):
         rv = self.client.get('/')
@@ -88,3 +89,16 @@ class PiBrewTest(unittest.TestCase):
         received = client.get_received()
         self.assertEqual('setpoint changed', received[0]['name'])
         self.assertEqual('99.0', received[0]['args'][0]['value'])
+
+    def test_load_data(self):
+        client = socketio.test_client(self.app)
+        client.get_received()
+
+        # change setpoint
+        client.emit('load data')
+        received = client.get_received()
+        data = received[0]['args'][0]
+        self.assertIsInstance(data, dict)
+
+        for key in ['t', 'temp_ct', 'temp_sp', 'ht_pwr']:
+            self.assertIn(key, data)
