@@ -1,7 +1,7 @@
 from flask_wtf import Form
 from wtforms import DecimalField, SubmitField
 from wtforms.validators import Required, NumberRange
-from flask import Blueprint, render_template, redirect, url_for
+from flask import Blueprint, render_template, redirect, url_for, request
 from . import brew_controller
 
 
@@ -17,7 +17,8 @@ class SettingsForm(Form):
     tn = DecimalField('TN', places=2,
                       validators=[Required(), NumberRange(min=0.0, max=1000.0)])
 
-    submit = SubmitField()
+    submit = SubmitField('Speichern')
+    cancel = SubmitField('Abbrechen')
 
 
 @main.route('/')
@@ -36,8 +37,9 @@ def index():
 def settings():
     form = SettingsForm()
     if form.validate_on_submit():
-        brew_controller.kp = float(form.kp.data)
-        brew_controller.tn = float(form.tn.data)
+        if 'submit' in request.form:
+            brew_controller.kp = float(form.kp.data)
+            brew_controller.tn = float(form.tn.data)
         return redirect(url_for('main.index'))
     else:
         form.kp.data = brew_controller.kp
