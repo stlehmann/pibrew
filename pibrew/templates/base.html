@@ -28,23 +28,23 @@
 
       // Enable/Disable Heater and Mixer
       if (data['ht_en']) {
-        $('#enableHeater').addClass('btn-primary');
+        $('#enableHeater').addClass('btn-danger');
       }
       else {
-        $('#enableHeater').removeClass('btn-primary');
+        $('#enableHeater').removeClass('btn-danger');
       };
 
       if (data['mx_en']) {
-        $('#enableMixer').addClass('btn-primary');
+        $('#enableMixer').addClass('btn-danger');
       }
       else {
-        $('#enableMixer').removeClass('btn-primary');
+        $('#enableMixer').removeClass('btn-danger');
       }
     });
 
     // Enable / Disable Heater state
     $('#enableHeater').click(function() {
-      if ($(this).hasClass('btn-primary')) {
+      if ($(this).hasClass('btn-danger')) {
         socket.emit('disable heater');
       }
       else {
@@ -53,16 +53,16 @@
     });
 
     socket.on('heater enabled', function() {
-      $('#enableHeater').addClass('btn-primary');
+      $('#enableHeater').addClass('btn-danger');
     });
 
     socket.on('heater disabled', function() {
-      $('#enableHeater').removeClass('btn-primary');
+      $('#enableHeater').removeClass('btn-danger');
     })
 
     // Enable / Disabe mixer state
     $('#enableMixer').click(function() {
-      if ($(this).hasClass('btn-primary')) {
+      if ($(this).hasClass('btn-danger')) {
         socket.emit('disable mixer');
       }
       else {
@@ -71,11 +71,11 @@
     })
 
     socket.on('mixer enabled', function() {
-      $('#enableMixer').addClass('btn-primary')
+      $('#enableMixer').addClass('btn-danger')
     });
 
     socket.on('mixer disabled', function() {
-      $('#enableMixer').removeClass('btn-primary');
+      $('#enableMixer').removeClass('btn-danger');
     });
   });
 </script>
@@ -95,8 +95,8 @@
       <a class="navbar-brand" href="{{ url_for('main.index') }}"><img src="{{ url_for('static', filename='logo.png') }}"></a>
     </div>
     <div class="collapse navbar-collapse" id="navbarCollapse">
-      <button id="enableHeater" class="btn btn-default navbar-btn{% if heater_enabled %} btn-primary{% endif %}">Heizung</button>
-      <button id="enableMixer" class="btn btn-default navbar-btn{% if mixer_enabled %} btn-primary{% endif %}">Rührwerk</button>
+      <button id="enableHeater" class="btn btn-default navbar-btn{% if heater_enabled %} btn-danger{% endif %}">Heizung</button>
+      <button id="enableMixer" class="btn btn-default navbar-btn{% if mixer_enabled %} btn-danger{% endif %}">Rührwerk</button>
       <ul class="nav navbar-nav">
         <li><a href="{{ url_for('main.settings') }}">Einstellungen</a>
       </ul>
