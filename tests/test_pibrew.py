@@ -22,6 +22,19 @@ class PiBrewTest(unittest.TestCase):
         rv = self.client.get('/')
         self.assertEqual(200, rv.status_code)
 
+    def test_settings(self):
+        # test get
+        rv = self.client.get('settings/')
+        self.assertEqual(200, rv.status_code)
+
+        # test cancel post
+        form = {'kp': 100.0, 'tn': 20.0, 'cancel': 'cancel'}
+        rv = self.client.post('settings/', data=form)
+
+        # test submit post
+        form = {'kp': 100.0, 'tn': 20.0, 'submit': 'submit'}
+        rv = self.client.post('settings/', data=form)
+
     def test_connect(self):
         client = socketio.test_client(self.app)
         received = client.get_received()

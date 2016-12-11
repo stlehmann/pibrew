@@ -26,6 +26,7 @@ class ProductionConfig(Config):
 
 
 class TestingConfig(Config):
+    WTF_CSRF_ENABLED = False
     DATABASE_FILENAME = 'pibrew-test.sqlite'
     TESTING = True
     SIMULATE = True
