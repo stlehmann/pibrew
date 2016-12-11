@@ -170,6 +170,9 @@
       // Refresh Gauge
       jqxLinearGauge($('#gauge'), {'value': data['temp_ct']});
 
+      var vis_state = data['ht_on'] ? 'visible' : 'hidden';
+      $('#flame').css('visibility', vis_state);
+
     });
 
     // set setpoint
@@ -196,7 +199,7 @@
       <div class="col-sm-4">
         <div class="visu-container">
           <img id="pot" src="{{ url_for('static', filename='einkocher.jpg') }}">
-          <div id="heaterStateLight"></div>
+          <img id="flame" src="{{ url_for('static', filename='flame.png') }}">
           <div id="gauge"></div>
         </div>
       </div>
