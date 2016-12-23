@@ -16,6 +16,7 @@ class Config(object):
 
 class DevelopmentConfig(Config):
     DATABASE_FILENAME = 'pibrew-devel.sqlite'
+    TEMPLATES_AUTO_RELOAD = True
     DEBUG = False
     LOG_LEVEL = logging.DEBUG
 
