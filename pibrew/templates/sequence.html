@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block scripts %}
+  {{ super() }}
+  <script>
+    $(document).ready(function() {
+      $('#navSequence').addClass('active');
+    });
+  </script>
+{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <div class="row">
+      <div class="col-xs-12">
+        <a class="btn btn-default" href="{{ url_for('main.add_step') }}">Add Step</a>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-12">
+        <table>
+          {% for step in steps %}
+          <tr>
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}

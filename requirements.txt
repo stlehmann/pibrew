@@ -7,5 +7,6 @@ flask-bootstrap
 flask-script
 flask-socketio
 flask-wtf
+wtforms-components
 git+https://github.com/sjl/flask-lesscss.git#egg=flask-lesscss
 sqlitedict

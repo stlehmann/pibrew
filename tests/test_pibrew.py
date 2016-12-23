@@ -28,12 +28,14 @@ class PiBrewTest(unittest.TestCase):
         self.assertEqual(200, rv.status_code)
 
         # test cancel post
-        form = {'kp': 100.0, 'tn': 20.0, 'cancel': 'cancel'}
+        form = {'kp': 101.0, 'tn': 21.0, 'cancel': 'cancel'}
         rv = self.client.post('settings/', data=form)
 
         # test submit post
-        form = {'kp': 100.0, 'tn': 20.0, 'submit': 'submit'}
+        form = {'kp': 101.0, 'tn': 21.0, 'submit': 'submit'}
         rv = self.client.post('settings/', data=form)
+        self.assertAlmostEqual(101.0, brew_controller.kp, places=2)
+        self.assertAlmostEqual(21.0, brew_controller.tn, places=2)
 
     def test_connect(self):
         client = socketio.test_client(self.app)

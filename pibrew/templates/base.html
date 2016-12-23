@@ -98,7 +98,8 @@
       <button id="enableHeater" class="btn btn-default navbar-btn{% if heater_enabled %} btn-danger{% endif %}">Heizung</button>
       <button id="enableMixer" class="btn btn-default navbar-btn{% if mixer_enabled %} btn-danger{% endif %}">Rührwerk</button>
       <ul class="nav navbar-nav">
-        <li><a href="{{ url_for('main.settings') }}">Einstellungen</a>
+        <li id="navSequence"><a href="{{ url_for('main.sequence') }}">Ablauf</a>
+        <li id="navSettings"><a href="{{ url_for('main.settings') }}">Einstellungen</a>
       </ul>
       <p class="navbar-text pull-right" id="timestamp" style="display: inline;"></p>
     </div>

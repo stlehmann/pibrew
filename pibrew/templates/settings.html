@@ -1,6 +1,15 @@
 {% extends 'base.html' %}
 {% import 'bootstrap/wtf.html' as wtf %}
 
+{% block scripts %}
+  {{ super() }}
+  <script>
+    $(document).ready(function() {
+      $('#navSettings').addClass('active');
+    });
+  </script>
+{% endblock %}
+
 {% block content %}
 <div class="container">
   <div class="row">
