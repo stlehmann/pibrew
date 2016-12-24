@@ -19,9 +19,22 @@
     </div>
     <div class="row">
       <div class="col-xs-12">
-        <table>
+        <table class="table">
+          <th>Name</th>
+          <th>Temperatur</th>
+          <th>Dauer</th>
+          <th>Toleranz</th>
+          <th>Heizung</th>
+          <th>Mixer</th>
+
           {% for step in steps %}
           <tr>
+            <td>{{ step.name }}</td>
+            <td>{{ step.temperature }}</td>
+            <td>{{ step.duration }}</td>
+            <td>{{ step.tolerance }}</td>
+            <td>{{ step.heater }}</td>
+            <td>{{ step.mixer }}</td>
           </tr>
           {% endfor %}
         </table>
