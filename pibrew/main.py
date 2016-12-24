@@ -1,12 +1,16 @@
+import logging
+from flask import jsonify
 from flask_wtf import FlaskForm
 from wtforms import DecimalField, SubmitField, StringField, BooleanField
 from wtforms_components import TimeField
 from wtforms.validators import Required, NumberRange, Length, ValidationError
 from flask import Blueprint, render_template, redirect, url_for, request
-from . import brew_controller
+from . import brew_controller, db
+from .models import SequenceStep
 
 
 main = Blueprint('main', __name__)
+logger = logging.getLogger(__name__)
 
 
 def _required(form, field):
@@ -57,7 +61,8 @@ def index():
 
 @main.route('sequence/', methods=['GET', 'POST'])
 def sequence():
-    return render_template('sequence.html')
+    steps = SequenceStep.query.all()
+    return render_template('sequence.html', steps=steps)
 
 
 @main.route('sequence/steps/add', methods=['GET', 'POST'])
@@ -66,10 +71,30 @@ def add_step():
     if request.method == 'POST':
         if 'submit' in request.form:
             if form.validate_on_submit():
-                print(form.duration.data)
-        else:
-            return redirect(url_for('main.sequence'))
+                step = SequenceStep()
+                step.name = form.name.data
+                step.duration = form.duration.data
+                step.temperature = form.temperature.data
+                step.tolerance = form.tolerance.data
+                step.heater = form.heater.data
+                step.mixer = form.mixer.data
+                db.session.add(step)
+                db.session.commit()
+        return redirect(url_for('main.sequence'))
     return render_template('step.html', form=form)
+
+
+@main.route('sequence/steps/<step_id>/delete', methods=['DELETE'])
+def delete_step(step_id):
+    step = SequenceStep.query.filter_by(id=step_id).first()
+    if step is None:
+        return jsonify(
+            status='error',
+            message='no sequence step with id {}'.format(step_id)
+        )
+    db.session.delete(step)
+    db.session.commit()
+    return jsonify(status='ok')
 
 
 @main.route('settings/', methods=['GET', 'POST'])

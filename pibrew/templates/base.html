@@ -17,6 +17,7 @@
 <script>
   // Establish socketio connection
   var socket;
+  $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 
   $(document).ready(function() {
     socket = io.connect('http://' + document.domain + ':' + location.port);

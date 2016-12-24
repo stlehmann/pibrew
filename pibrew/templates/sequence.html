@@ -6,6 +6,16 @@
   <script>
     $(document).ready(function() {
       $('#navSequence').addClass('active');
+
+      $('.del-step-btn').click(function() {
+        var step_id = $(this).parents('tr').data('step-id');
+        $.ajax({
+          url: $SCRIPT_ROOT + '/sequence/steps/' + step_id + '/delete',
+          type: 'DELETE'
+        }).done(function(data) {
+          location.reload();
+        })
+      });
     });
   </script>
 {% endblock %}
@@ -17,24 +27,36 @@
         <a class="btn btn-default" href="{{ url_for('main.add_step') }}">Add Step</a>
       </div>
     </div>
+    <br/>
     <div class="row">
       <div class="col-xs-12">
         <table class="table">
+          <th></th>
           <th>Name</th>
           <th>Temperatur</th>
           <th>Dauer</th>
           <th>Toleranz</th>
           <th>Heizung</th>
           <th>Mixer</th>
+          <th></th>
 
           {% for step in steps %}
-          <tr>
+          <tr data-step-id="{{ step.id }}">
+            <td>
+              <a href=""><span class="glyphicon glyphicon-arrow-up"></span></a>
+              <a href=""><span class="glyphicon glyphicon-arrow-down"></span></a>
+            </td>
             <td>{{ step.name }}</td>
             <td>{{ step.temperature }}</td>
             <td>{{ step.duration }}</td>
             <td>{{ step.tolerance }}</td>
             <td>{{ step.heater }}</td>
             <td>{{ step.mixer }}</td>
+            <td>
+              <a class="del-step-btn" href="">
+                <span class="glyphicon glyphicon-trash"></span>
+              </a>
+            </td>
           </tr>
           {% endfor %}
         </table>
