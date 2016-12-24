@@ -6,6 +6,7 @@ import arrow
 from flask import Flask
 from flask_bootstrap import Bootstrap
 from flask_socketio import SocketIO
+from flask_sqlalchemy import SQLAlchemy
 from flaskext.lesscss import lesscss
 
 from config import config
@@ -20,6 +21,7 @@ background_thread = threading.Thread()
 # Flask Plugins
 bootstrap = Bootstrap()
 socketio = SocketIO()
+db = SQLAlchemy()
 brew_controller = BrewController()
 process_data = {'t': [], 'temp_sp': [], 'temp_ct': [], 'ht_pwr': []}
 
@@ -44,6 +46,7 @@ def create_app(config_name=None):
     app.logger.info('started application')
 
     # init flask plugins
+    db.init_app(app)
     lesscss(app)
     bootstrap.init_app(app)
     socketio.init_app(app)

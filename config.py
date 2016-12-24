@@ -12,6 +12,8 @@ class Config(object):
     SECRET_KEY = os.environ.get('SECRET_KEY',
                                 '9844f8c4eebfc08ed88cd3d64f201db3')
     PROCESS_INTERVAL = 1.0  # interval for brew controller processing
+    SQLALCHEMY_COMMIT_ON_TEARDOWN = True
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 
 class DevelopmentConfig(Config):
@@ -19,11 +21,14 @@ class DevelopmentConfig(Config):
     TEMPLATES_AUTO_RELOAD = True
     DEBUG = False
     LOG_LEVEL = logging.DEBUG
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or \
+        'sqlite:////' + os.path.join(basedir, 'data-dev.sqlite')
 
 
 class ProductionConfig(Config):
     DATABASE_FILENAME = 'pibrew.sqlite'
-    pass
+    SQLALCHEMY_DATABASE_URI = os.environ.get('PROD_DATABASE_URL') or \
+        'sqlite:////' + os.path.join(basedir, 'data-prod.sqlite')
 
 
 class TestingConfig(Config):
@@ -32,9 +37,12 @@ class TestingConfig(Config):
     TESTING = True
     SIMULATE = True
     PROCESS_INTERVAL = 0.1  # interval for brew controller processing
+    SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or \
+        'sqlite:////' + os.path.join(basedir, 'data-test.sqlite')
 
 
 config = {
+    'default': DevelopmentConfig,
     'development': DevelopmentConfig,
     'production': ProductionConfig,
     'testing': TestingConfig
