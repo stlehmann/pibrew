@@ -34,7 +34,7 @@ class SettingsForm(FlaskForm):
 class StepForm(FlaskForm):
     name = StringField('Name:', validators=[_required, Length(1, 128)])
     duration = TimeField(
-        'Dauer (Min:Sek):', format='%M:%S', validators=[_required])
+        'Dauer (hh:mm:ss):', format='%H:%M:%S', validators=[_required])
     temperature = DecimalField(
         'Temperatur (°C):', places=1,
         validators=[_required, NumberRange(1, 100)])
@@ -82,6 +82,35 @@ def add_step():
                 db.session.commit()
         return redirect(url_for('main.sequence'))
     return render_template('step.html', form=form)
+
+
+@main.route('sequence/steps/<step_id>/edit', methods=['GET', 'POST'])
+def edit_step(step_id):
+    form = StepForm()
+    step = SequenceStep.query.filter_by(id=step_id).first_or_404()
+    if request.method == 'POST':
+        if 'submit' in request.form:
+            if form.validate_on_submit():
+                step.name = form.name.data
+                step.duration = form.duration.data
+                step.temperature = form.temperature.data
+                step.tolerance = form.tolerance.data
+                step.heater = form.heater.data
+                step.mixer = form.mixer.data
+                db.session.add(step)
+                db.session.commit()
+        return redirect(url_for('main.sequence'))
+    else:
+        form.name.data = step.name
+        form.duration.data = step.duration
+        form.temperature.data = step.temperature
+        form.tolerance.data = step.tolerance
+        form.heater.data = step.heater
+        form.mixer.data = step.mixer
+    return render_template('step.html', form=form)
+
+
+
 
 
 @main.route('sequence/steps/<step_id>/delete', methods=['DELETE'])

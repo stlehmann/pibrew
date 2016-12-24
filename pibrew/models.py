@@ -1,5 +1,6 @@
 from . import db
 
+
 class OrderableMixin:
 
     order = db.Column(db.Integer, index=True)

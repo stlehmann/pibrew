@@ -68,7 +68,7 @@
             <td>
               <a class="step-up-btn" href=""><span class="glyphicon glyphicon-arrow-up"></span></a>
               <a class="step-down-btn" href=""><span class="glyphicon glyphicon-arrow-down"></span></a>
-              <a class="edit-step" href=""><span class="glyphicon glyphicon-edit"></span></a>
+              <a class="edit-step" href="{{ url_for('main.edit_step', step_id=step.id) }}"><span class="glyphicon glyphicon-edit"></span></a>
             </td>
             <td>{{ step.name }}</td>
             <td>{{ step.temperature }}</td>

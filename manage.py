@@ -6,7 +6,8 @@ import subprocess
 # import eventlet and monkey patch threading native objects so they
 # work with eventlet
 import eventlet
-eventlet.monkey_patch()
+if 'run' in sys.argv:
+    eventlet.monkey_patch()
 
 from pibrew import create_app, db
 from pibrew.models import Setting, SequenceStep
