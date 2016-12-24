@@ -61,7 +61,7 @@ def index():
 
 @main.route('sequence/', methods=['GET', 'POST'])
 def sequence():
-    steps = SequenceStep.query.all()
+    steps = SequenceStep.query.order_by(SequenceStep.order).all()
     return render_template('sequence.html', steps=steps)
 
 
@@ -93,6 +93,34 @@ def delete_step(step_id):
             message='no sequence step with id {}'.format(step_id)
         )
     db.session.delete(step)
+    db.session.commit()
+    return jsonify(status='ok')
+
+
+@main.route('sequence/steps/<step_id>/up', methods=['POST'])
+def move_step_up(step_id):
+    step = SequenceStep.query.filter_by(id=step_id).first()
+    if step is None:
+        return jsonify(
+            status='error',
+            message='no sequence step with id {}'.format(step_id)
+        )
+    step.move_up()
+    db.session.add(step)
+    db.session.commit()
+    return jsonify(status='ok')
+
+
+@main.route('sequence/steps/<step_id>/down', methods=['POST'])
+def move_step_down(step_id):
+    step = SequenceStep.query.filter_by(id=step_id).first()
+    if step is None:
+        return jsonify(
+            status='error',
+            message='no sequence step with id {}'.format(step_id)
+        )
+    step.move_down()
+    db.session.add(step)
     db.session.commit()
     return jsonify(status='ok')
 

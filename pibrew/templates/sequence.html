@@ -7,6 +7,7 @@
     $(document).ready(function() {
       $('#navSequence').addClass('active');
 
+      // Delete step
       $('.del-step-btn').click(function() {
         var step_id = $(this).parents('tr').data('step-id');
         $.ajax({
@@ -14,7 +15,29 @@
           type: 'DELETE'
         }).done(function(data) {
           location.reload();
-        })
+        });
+      });
+
+      // Move step up
+      $('.step-up-btn').click(function() {
+        var step_id = $(this).parents('tr').data('step-id');
+        $.ajax({
+          url: $SCRIPT_ROOT + '/sequence/steps/' + step_id + '/up',
+          type: 'POST'
+        }).donw(function(data) {
+          location.reload();
+        });
+      });
+
+      // Move step down
+      $('.step-down-btn').click(function() {
+        var step_id = $(this).parents('tr').data('step-id');
+        $.ajax({
+          url: $SCRIPT_ROOT + '/sequence/steps/' + step_id + '/down',
+          type: 'POST'
+        }).donw(function(data) {
+          location.reload();
+        });
       });
     });
   </script>
@@ -24,7 +47,7 @@
   <div class="container">
     <div class="row">
       <div class="col-xs-12">
-        <a class="btn btn-default" href="{{ url_for('main.add_step') }}">Add Step</a>
+        <a class="btn btn-default" href="{{ url_for('main.add_step') }}">Schitt hinzufügen</a>
       </div>
     </div>
     <br/>
@@ -43,8 +66,9 @@
           {% for step in steps %}
           <tr data-step-id="{{ step.id }}">
             <td>
-              <a href=""><span class="glyphicon glyphicon-arrow-up"></span></a>
-              <a href=""><span class="glyphicon glyphicon-arrow-down"></span></a>
+              <a class="step-up-btn" href=""><span class="glyphicon glyphicon-arrow-up"></span></a>
+              <a class="step-down-btn" href=""><span class="glyphicon glyphicon-arrow-down"></span></a>
+              <a class="edit-step" href=""><span class="glyphicon glyphicon-edit"></span></a>
             </td>
             <td>{{ step.name }}</td>
             <td>{{ step.temperature }}</td>
