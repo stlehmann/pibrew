@@ -10,20 +10,20 @@ from flask_sqlalchemy import SQLAlchemy
 from flaskext.lesscss import lesscss
 
 from config import config
-from .brewcontroller import BrewController
 
 
 logger = logging.getLogger(__name__)
-
-
+process_data = {'t': [], 'temp_sp': [], 'temp_ct': [], 'ht_pwr': []}
 background_thread = threading.Thread()
 
 # Flask Plugins
 bootstrap = Bootstrap()
 socketio = SocketIO()
 db = SQLAlchemy()
+
+from .brewcontroller import BrewController
 brew_controller = BrewController()
-process_data = {'t': [], 'temp_sp': [], 'temp_ct': [], 'ht_pwr': []}
+
 
 from . import events  # noqa
 

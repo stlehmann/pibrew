@@ -32,9 +32,9 @@ class PiBrewTest(unittest.TestCase):
         rv = self.client.post('settings/', data=form)
 
         # test submit post
-        form = {'kp': 101.0, 'tn': 21.0, 'submit': 'submit'}
+        form = {'kp': 99.0, 'tn': 21.0, 'submit': 'submit'}
         rv = self.client.post('settings/', data=form)
-        self.assertAlmostEqual(101.0, brew_controller.kp, places=2)
+        self.assertAlmostEqual(99.0, brew_controller.kp, places=2)
         self.assertAlmostEqual(21.0, brew_controller.tn, places=2)
 
     def test_connect(self):

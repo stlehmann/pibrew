@@ -1,12 +1,57 @@
 import logging
 import sys
-from sqlitedict import SqliteDict
 from datetime import datetime
+from . import db
+from .models import Setting
 from .hardware import HdwRaspberry, HdwSimulator
 from .controllers import TempController, PWM_DC
 
 
 logger = logging.getLogger(__file__)
+
+
+class Settings:
+    defaults = {
+        'temp_setpoint': 50.0,
+        'kp': 10.0,
+        'tn': 180.0,
+        'manual_power_pct': 0.0,
+        'duty_cycle_s': 60.0
+    }
+    app = None
+
+    def __init__(self, app):
+        self.app = app
+
+    def __getattr__(self, name):
+        with self.app.app_context():
+            setting = Setting.query.filter_by(name=name).first()
+            if setting is None:
+                default = Settings.defaults.get(name)
+                if default is not None:
+                    setting = Setting(name=name, value=default)
+                    db.session.add(setting)
+                    db.session.commit()
+                else:
+                    return AttributeError(
+                        'There is no setting called {}'.format(name)
+                    )
+            else:
+                return setting.value
+
+    def __setattr__(self, name, value):
+        if name in ('app', ):
+            super().__setattr__(name, value)
+        else:
+            with self.app.app_context():
+                setting = Setting.query.filter_by(name=name).first()
+                if setting is None:
+                    setting = Setting(name=name, value=value)
+                    db.session.add(setting)
+                    db.session.commit()
+                else:
+                    setting.value = value
+                    db.session.commit()
 
 
 class BrewController():
@@ -36,7 +81,6 @@ class BrewController():
 
         self.initialized = True
         self.simulate = app.config['SIMULATE']
-        self.db_filename = app.config['DATABASE_FILENAME']
 
         self.temp_controller = TempController()
         self.temp_pwm = PWM_DC()
@@ -48,14 +92,7 @@ class BrewController():
         self.manual = False
         self.reset = False
 
-        # load settings and set to default values if none exist
-        self.settings = SqliteDict(self.db_filename, 'settings',
-                                   autocommit=True)
-        self.settings.setdefault('temp_setpoint', 50.0)
-        self.settings.setdefault('kp', 10.0)
-        self.settings.setdefault('tn', 180.0)
-        self.settings.setdefault('manual_power_pct', 0.0)
-        self.settings.setdefault('duty_cycle_s', 60.0)
+        self.settings = Settings(app)
 
         if self.simulate:
             self.hdw_interface = HdwSimulator()
@@ -85,11 +122,11 @@ class BrewController():
             enable=self.heater_enabled,
             now=self.now,
             temp_current=self.temp_current,
-            temp_setpoint=self.settings['temp_setpoint'],
-            kp=self.settings['kp'],
-            tn=self.settings['tn'],
+            temp_setpoint=self.settings.temp_setpoint,
+            kp=self.settings.kp,
+            tn=self.settings.tn,
             manual=self.manual,
-            manual_power_pct=self.settings['manual_power_pct'],
+            manual_power_pct=self.settings.manual_power_pct,
             reset=self.reset
         )
 
@@ -98,7 +135,7 @@ class BrewController():
             now=self.now,
             enable=self.heater_enabled,
             in_pct=heater_power_pct,
-            duty_cycle_s=self.settings['duty_cycle_s'],
+            duty_cycle_s=self.settings.duty_cycle_s,
         )
 
         # set output of the heater according to the temperature controller
@@ -108,47 +145,47 @@ class BrewController():
     # temp_setpoint property
     @property
     def temp_setpoint(self):
-        return self.settings['temp_setpoint']
+        return self.settings.temp_setpoint
 
     @temp_setpoint.setter
     def temp_setpoint(self, value):
-        self.settings['temp_setpoint'] = value
+        self.settings.temp_setpoint = value
 
     # manual_power_pct property
     @property
     def manual_power_pct(self):
-        return self.settings['manual_power_pct']
+        return self.settings.manual_power_pct
 
     @manual_power_pct.setter
     def manual_power_pct(self, value: float):
-        self.settings['manual_power_pct'] = value
+        self.settings.manual_power_pct = value
 
     # kp property
     @property
     def kp(self):
-        return self.settings['kp']
+        return self.settings.kp
 
     @kp.setter
     def kp(self, value: float):
-        self.settings['kp'] = value
+        self.settings.kp = value
 
     # tn property
     @property
     def tn(self):
-        return self.settings['tn']
+        return self.settings.tn
 
     @tn.setter
     def tn(self, value: float):
-        self.settings['tn'] = value
+        self.settings.tn = value
 
     # duty cycle property
     @property
     def duty_cycle_s(self):
-        return self.settings['duty_cycle_s']
+        return self.settings.duty_cycle_s
 
     @duty_cycle_s.setter
     def duty_cycle_s(self, value):
-        self.settings['duty_cycle_s'] = value
+        self.settings.duty_cycle_s = value
 
     # heater power property
     @property
