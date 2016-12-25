@@ -5,6 +5,7 @@
   {{ super() }}
   <script>
     $(document).ready(function() {
+      // Activate current nav button
       $('#navSequence').addClass('active');
 
       // Delete step
@@ -39,6 +40,25 @@
           location.reload();
         });
       });
+
+      // Signal to start sequence
+      $('#seqStartBtn').click(function() {
+        socket.emit('start sequence');
+      });
+
+      socket.on('sequence started', function() {
+        $('#seqStartBtn').addClass('active');
+      });
+
+      // Signal to stop sequence
+      $('#seqStopBtn').click(function() {
+        socket.emit('stop sequence');
+      });
+
+      socket.on('sequence stopped', function() {
+        $('#seqStartBtn').removeClass('active');
+      });
+
     });
   </script>
 {% endblock %}
@@ -47,7 +67,7 @@
   <div class="container">
     <div class="row">
       <div class="col-xs-12">
-        <a class="btn btn-default" href="{{ url_for('main.add_step') }}">Schitt hinzufügen</a>
+        <a class="btn btn-default" href="{{ url_for('main.add_step') }}">Schritt hinzufügen</a>
       </div>
     </div>
     <br/>
@@ -84,6 +104,25 @@
           </tr>
           {% endfor %}
         </table>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-12">
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="container">
+              <div class="row">
+                <div class="col-6-xs">
+                  <button id="seqBwdBtn" class="btn btn-default"><span class="glyphicon glyphicon-step-backward"></span></button>
+                  <button id="seqStartBtn" class="btn btn-default"><span class="glyphicon glyphicon-play"></span></button>
+                  <button id="seqPauseBtn" class="btn btn-default" disabled><span class="glyphicon glyphicon-pause"></span></button>
+                  <button id="seqStopBtn" class="btn btn-default"><span class="glyphicon glyphicon-stop"></span></button>
+                  <button id="seqFwdBtn" class="btn btn-default"><span class="glyphicon glyphicon-step-forward"></span></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

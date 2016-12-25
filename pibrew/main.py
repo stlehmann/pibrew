@@ -3,7 +3,7 @@ from flask import jsonify
 from flask_wtf import FlaskForm
 from wtforms import DecimalField, SubmitField, StringField, BooleanField
 from wtforms_components import TimeField
-from wtforms.validators import Required, NumberRange, Length, ValidationError
+from wtforms.validators import NumberRange, Length, InputRequired
 from flask import Blueprint, render_template, redirect, url_for, request
 from . import brew_controller, db
 from .models import SequenceStep
@@ -13,31 +13,32 @@ main = Blueprint('main', __name__)
 logger = logging.getLogger(__name__)
 
 
-def _required(form, field):
-    if not field.raw_data or not field.raw_data[0]:
-        raise ValidationError('Field is required')
+class MyInputRequired(InputRequired):
+    field_flags = ()
 
 
 class SettingsForm(FlaskForm):
     # proportional part KP of controller
     kp = DecimalField('KP', places=2,
-                      validators=[Required(), NumberRange(min=0.0, max=100.0)])
+                      validators=[MyInputRequired(),
+                                  NumberRange(min=0.0, max=100.0)])
 
     # integral part TN of controller
     tn = DecimalField('TN', places=2,
-                      validators=[Required(), NumberRange(min=0.0, max=1000.0)])
+                      validators=[MyInputRequired(),
+                                  NumberRange(min=0.0, max=1000.0)])
 
     submit = SubmitField('Speichern')
     cancel = SubmitField('Abbrechen')
 
 
 class StepForm(FlaskForm):
-    name = StringField('Name:', validators=[_required, Length(1, 128)])
+    name = StringField('Name:', validators=[MyInputRequired(), Length(1, 128)])
     duration = TimeField(
-        'Dauer (hh:mm:ss):', format='%H:%M:%S', validators=[_required])
+        'Dauer (hh:mm:ss):', format='%H:%M:%S', validators=[MyInputRequired()])
     temperature = DecimalField(
         'Temperatur (°C):', places=1,
-        validators=[_required, NumberRange(1, 100)])
+        validators=[MyInputRequired(), NumberRange(1, 100)])
     tolerance = DecimalField(
         'Toleranz (°C):', places=1, validators=[NumberRange(0, 20)])
     heater = BooleanField('Heizung')
@@ -80,7 +81,8 @@ def add_step():
                 step.mixer = form.mixer.data
                 db.session.add(step)
                 db.session.commit()
-        return redirect(url_for('main.sequence'))
+        else:
+            return redirect(url_for('main.sequence'))
     return render_template('step.html', form=form)
 
 
@@ -108,9 +110,6 @@ def edit_step(step_id):
         form.heater.data = step.heater
         form.mixer.data = step.mixer
     return render_template('step.html', form=form)
-
-
-
 
 
 @main.route('sequence/steps/<step_id>/delete', methods=['DELETE'])

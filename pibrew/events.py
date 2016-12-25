@@ -44,3 +44,15 @@ def on_change_setpoint(data):
 def on_load_data():
     logger.debug('Socket: init data')
     socketio.emit('init data', process_data)
+
+
+@socketio.on('start sequence')
+def on_start_sequence():
+    logger.debug('sequence started')
+    socketio.emit('sequence started')
+
+
+@socketio.on('stop sequence')
+def on_stop_sequence():
+    logger.debug('sequence stopped')
+    socketio.emit('sequence stopped')
