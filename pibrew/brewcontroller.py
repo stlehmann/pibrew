@@ -5,6 +5,7 @@ from . import db
 from .models import Setting
 from .hardware import HdwRaspberry, HdwSimulator
 from .controllers import TempController, PWM_DC
+from .sequence import Sequence
 
 
 logger = logging.getLogger(__file__)
@@ -84,6 +85,7 @@ class BrewController():
 
         self.temp_controller = TempController()
         self.temp_pwm = PWM_DC()
+        self.sequence = Sequence(app, self)
 
         self.heater_enabled = False
         self.mixer_enabled = False
@@ -116,6 +118,9 @@ class BrewController():
 
         # read the current temperature
         self.temp_current = self.hdw_interface.read_temp()
+
+        # process sequence controller
+        self.sequence.process(self.temp_current, self.now)
 
         # process temperature controller
         heater_power_pct = self.temp_controller.process(

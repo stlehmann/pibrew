@@ -48,11 +48,13 @@ def on_load_data():
 
 @socketio.on('start sequence')
 def on_start_sequence():
+    brew_controller.sequence.start()
     logger.debug('sequence started')
     socketio.emit('sequence started')
 
 
 @socketio.on('stop sequence')
 def on_stop_sequence():
+    brew_controller.sequence.stop()
     logger.debug('sequence stopped')
     socketio.emit('sequence stopped')

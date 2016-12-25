@@ -86,6 +86,7 @@ def process_controller(interval):
             'mx_en': brew_controller.mixer_enabled,
             'ht_pwr': '{:.1f}'.format(brew_controller.heater_power_pct),
             'ht_on': brew_controller.heater_on,
+            'sequence': brew_controller.sequence.get_data()
         }
 
         # Only save every tenth value
@@ -94,5 +95,6 @@ def process_controller(interval):
         process_data['temp_ct'].append(data['temp_ct'])
         process_data['ht_pwr'].append(data['ht_pwr'])
 
+        print('Process Data: {}'.format(data))
         socketio.emit('update', data)
         time.sleep(interval)

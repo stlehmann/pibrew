@@ -3,6 +3,8 @@ from . import db
 
 class OrderableMixin:
 
+    # TODO: implement testing
+
     order = db.Column(db.Integer, index=True)
 
     def _get_model_class(self):
@@ -89,6 +91,6 @@ class SequenceStep(db.Model, OrderableMixin):
     heater = db.Column(db.Boolean)
     mixer = db.Column(db.Boolean)
 
-    def __init__(self):
-        db.Model.__init__(self)
+    def __init__(self, *args, **kwargs):
+        db.Model.__init__(self, *args, **kwargs)
         OrderableMixin.__init__(self)
