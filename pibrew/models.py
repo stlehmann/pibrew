@@ -1,4 +1,5 @@
 from . import db
+from utils import s_to_hms, hms_to_s
 
 
 class OrderableMixin:
@@ -9,8 +10,8 @@ class OrderableMixin:
 
     def _get_model_class(self):
         for c in db.Model._decl_class_registry.values():
-            if (    hasattr(c, '__tablename__')
-                    and c.__tablename__ == self.__tablename__):
+            if (hasattr(c, '__tablename__') and
+                    c.__tablename__ == self.__tablename__):
                 return c
 
     def __init__(self):
@@ -85,7 +86,7 @@ class SequenceStep(db.Model, OrderableMixin):
     __tablename = 'sequence_steps'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64))
-    duration = db.Column(db.Time)
+    duration = db.Column(db.Integer)
     temperature = db.Column(db.Float(precision=1))
     tolerance = db.Column(db.Float(precision=1))
     heater = db.Column(db.Boolean)
@@ -94,3 +95,6 @@ class SequenceStep(db.Model, OrderableMixin):
     def __init__(self, *args, **kwargs):
         db.Model.__init__(self, *args, **kwargs)
         OrderableMixin.__init__(self)
+
+    def duration_formatted(self):
+        return '{:02}:{:02}:{:02}'.format(*s_to_hms(self.duration)) or ''

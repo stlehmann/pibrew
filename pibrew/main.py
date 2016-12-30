@@ -2,10 +2,10 @@ import logging
 from flask import jsonify
 from flask_wtf import FlaskForm
 from wtforms import DecimalField, SubmitField, StringField, BooleanField
-from wtforms_components import TimeField
 from wtforms.validators import NumberRange, Length, InputRequired
 from flask import Blueprint, render_template, redirect, url_for, request
 from . import brew_controller, db
+from .fields import TimespanField
 from .models import SequenceStep
 
 
@@ -34,8 +34,8 @@ class SettingsForm(FlaskForm):
 
 class StepForm(FlaskForm):
     name = StringField('Name:', validators=[MyInputRequired(), Length(1, 128)])
-    duration = TimeField(
-        'Dauer (hh:mm:ss):', format='%H:%M:%S', validators=[MyInputRequired()])
+    duration = TimespanField(
+        'Dauer (hh:mm:ss):', validators=[MyInputRequired()])
     temperature = DecimalField(
         'Temperatur (°C):', places=1,
         validators=[MyInputRequired(), NumberRange(1, 100)])
