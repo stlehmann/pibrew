@@ -34,6 +34,7 @@ class ProductionConfig(Config):
 class TestingConfig(Config):
     WTF_CSRF_ENABLED = False
     DATABASE_FILENAME = 'pibrew-test.sqlite'
+    LOG_LEVEL = logging.ERROR
     TESTING = True
     SIMULATE = True
     PROCESS_INTERVAL = 0.1  # interval for brew controller processing

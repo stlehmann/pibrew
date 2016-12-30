@@ -8,7 +8,7 @@ from .controllers import TempController, PWM_DC
 from .sequence import Sequence
 
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger('pibrew.brewcontroller')
 
 
 class Settings:
@@ -80,6 +80,7 @@ class BrewController():
         if self.initialized:
             raise RuntimeError('BrewController can only be initialized once.')
 
+        self.app = app
         self.initialized = True
         self.simulate = app.config['SIMULATE']
 
@@ -104,8 +105,8 @@ class BrewController():
                 try:
                     self.hdw_interface = HdwRaspberry()
                 except IOError:
-                    logger.error('No temperature sensor found.'
-                                 'Continuing in simulation mode.')
+                    logger.warning('No temperature sensor found.'
+                                   'Continuing in simulation mode.')
                     self.hdw_interface = HdwSimulator()
             else:
                 logger.warning('Platform is not Linux. Continuing in '

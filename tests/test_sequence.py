@@ -60,6 +60,5 @@ class SequenceTestCase(unittest.TestCase):
         self.assertEqual(0, s.current_step_id)
 
 
-
 if __name__ == '__main__':
     unittest.main()
