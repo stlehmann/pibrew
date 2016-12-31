@@ -26,7 +26,7 @@ class Sequence:
         self.brew_ctl = brew_ctl
         self.steps = []
         self.start_time = None
-        self.cur_step_id = None
+        self.step_index = None
         self.time_total = timedelta()
         self.time_cur_step = timedelta()
         self.time_prev = None
@@ -38,6 +38,7 @@ class Sequence:
         with self.app.app_context():
             self.steps = SequenceStep.query.order_by(SequenceStep.order).all()
             [db.session.expunge(x) for x in self.steps]
+            self.step_index = None
 
     def start(self):
         self.pending_actions.append(ACTION_START)
@@ -64,7 +65,7 @@ class Sequence:
                 if self.state == STATE_STOPPED:
                     self.update_steps()
                     if len(self.steps):
-                        self.cur_step_id = 0
+                        self.step_index = 0
                         self.start_time = cur_time
                         self.state = STATE_RUNNING
 
@@ -76,12 +77,12 @@ class Sequence:
                     self.state = STATE_PAUSED
 
             elif (action == ACTION_FWD and len(self.steps) and
-                    self.cur_step_id < len(self.steps) - 1):
-                self.cur_step_id += 1
+                    self.step_index < len(self.steps) - 1):
+                self.step_index += 1
 
             elif (action == ACTION_BWD and len(self.steps) and
-                    self.cur_step_id > 0):
-                self.cur_step_id -= 1
+                    self.step_index > 0):
+                self.step_index -= 1
 
         # time counter for the whole sequence
         if self.state not in (STATE_FINISHED, STATE_STOPPED):
@@ -89,9 +90,10 @@ class Sequence:
 
         # state handling
         if self.state == STATE_RUNNING:
-            cur_step = self.steps[self.cur_step_id]
+            cur_step = self.steps[self.step_index]
 
             if self.cur_step_state == STEP_STATE_NOTHING:
+                self.time_cur_step = timedelta(seconds=0)
                 self.brew_ctl.temp_setpoint = cur_step.temperature
                 self.brew_ctl.heater_enabled = cur_step.heater
                 self.brew_ctl.mixer_enabled = cur_step.mixer
@@ -104,25 +106,31 @@ class Sequence:
 
             # HOLD temperature for time
             elif self.cur_step_state == STEP_STATE_HOLDING:
-                if self.time_cur_step < self.steps[self.cur_step_id].duration:
+                if (self.time_cur_step.total_seconds() <
+                        self.steps[self.step_index].duration):
                     self.time_cur_step += cur_time - self.time_prev
                 else:
                     self.cur_step_state = STEP_STATE_FINISHED
 
             elif self.cur_step_state == STEP_STATE_FINISHED:
-                if self.cur_step_id < len(self.steps) - 1:
-                    self.cur_step_state = STEP_STATE_HEATING
-                    self.cur_step_id += 1
+                if self.step_index < len(self.steps):
+                    self.cur_step_state = STEP_STATE_NOTHING
+                    self.step_index += 1
                 else:
                     self.state = STATE_FINISHED
 
         self.time_prev = cur_time
 
     def get_data(self):
-        return {
-            'state': self.state,
-            'cur_step_state': self.cur_step_state,
-            'cur_step_id': self.cur_step_id,
-            'time_total': '{}'.format(self.time_total),
-            'time_cur_step': '{}'.format(self.time_cur_step)
-        }
+        if self.state == STATE_RUNNING:
+            return {
+                'state': self.state,
+                'cur_step_state': self.cur_step_state,
+                'cur_step_id': self.steps[self.step_index].id,
+                'time_total': '{}'.format(self.time_total),
+                'time_cur_step': '{}'.format(self.time_cur_step)
+            }
+        else:
+            return {
+                'state': self.state,
+            }

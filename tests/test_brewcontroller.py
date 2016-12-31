@@ -1,7 +1,7 @@
 import time
 import unittest
 from pibrew.brewcontroller import BrewController
-from pibrew import create_app
+from pibrew import create_app, db
 
 
 class BrewControllerTestCase(unittest.TestCase):
@@ -10,10 +10,12 @@ class BrewControllerTestCase(unittest.TestCase):
         self.app = create_app('testing')
         self.ctx = self.app.app_context()
         self.ctx.push()
-
+        db.create_all()
         self.brew_controller = BrewController(self.app)
 
     def tearDown(self):
+        db.session.remove()
+        db.drop_all()
         self.ctx.pop()
 
     def test_singleton(self):

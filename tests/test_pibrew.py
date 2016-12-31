@@ -1,22 +1,29 @@
 import unittest
-from pibrew import create_app, socketio, brew_controller
+from pibrew import create_app, socketio, brew_controller, db
 
 
 class PiBrewTest(unittest.TestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        cls.app = create_app('testing')
+        cls.ctx = cls.app.app_context()
+        cls.ctx.push()
+        db.create_all()
+        cls.client = cls.app.test_client()
+        cls.process_interval = cls.app.config['PROCESS_INTERVAL']
+
+    @classmethod
+    def tearDownClass(cls):
+        db.session.remove()
+        db.drop_all()
+        cls.ctx.pop()
+
     def setUp(self):
-        self.app = create_app('testing')
-        self.client = self.app.test_client()
-        self.process_interval = self.app.config['PROCESS_INTERVAL']
         self.client.get('/')
 
     def tearDown(self):
         pass
-
-    def test_default_config(self):
-        self.app = create_app()
-        self.assertFalse(self.app.config['TESTING'])
-        self.assertFalse(self.app.config['SIMULATE'])
 
     def test_index(self):
         rv = self.client.get('/')
@@ -117,3 +124,7 @@ class PiBrewTest(unittest.TestCase):
 
         for key in ['t', 'temp_ct', 'temp_sp', 'ht_pwr']:
             self.assertIn(key, data)
+
+
+if __name__ == '__main__':
+    unittest.main()

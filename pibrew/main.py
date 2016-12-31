@@ -81,8 +81,7 @@ def add_step():
                 step.mixer = form.mixer.data
                 db.session.add(step)
                 db.session.commit()
-        else:
-            return redirect(url_for('main.sequence'))
+        return redirect(url_for('main.sequence'))
     return render_template('step.html', form=form)
 
 
