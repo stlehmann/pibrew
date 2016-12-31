@@ -31,7 +31,7 @@ def create_app(config_name=None):
     app = Flask(__name__)
 
     # load config
-    if config_name is None:
+    if config_name is None:  # pragma: no cover
         config_name = os.environ.get('FLASK_CONFIG', 'development')
     app.config.from_object(config[config_name])
 
@@ -57,43 +57,6 @@ def create_app(config_name=None):
 
     @app.before_first_request
     def init_brew_controller():
-        # init the brew controller and start the background task if none
-        # exists yet
-        if not brew_controller.initialized:
-            brew_controller.init_app(app)
-
-            background_thread = threading.Thread(
-                target=process_controller,
-                args=[app.config['PROCESS_INTERVAL']],
-                daemon=True
-            )
-            background_thread.start()
-            app.logger.info('started background thread')
+        brew_controller.init_app(app)
 
     return app
-
-
-def process_controller(interval):
-    while(1):
-        current_time = arrow.now()
-        brew_controller.process()
-
-        data = {
-            't': current_time.format('YYYY-MM-DD HH:mm:ss.SSS'),
-            'temp_sp': '{:.1f}'.format(brew_controller.temp_setpoint),
-            'temp_ct': '{:.1f}'.format(brew_controller.temp_current),
-            'ht_en': brew_controller.heater_enabled,
-            'mx_en': brew_controller.mixer_enabled,
-            'ht_pwr': '{:.1f}'.format(brew_controller.heater_power_pct),
-            'ht_on': brew_controller.heater_on,
-            'sequence': brew_controller.sequence.get_data()
-        }
-
-        # Only save every tenth value
-        process_data['t'].append(data['t'])
-        process_data['temp_sp'].append(data['temp_sp'])
-        process_data['temp_ct'].append(data['temp_ct'])
-        process_data['ht_pwr'].append(data['ht_pwr'])
-
-        socketio.emit('update', data)
-        time.sleep(interval)

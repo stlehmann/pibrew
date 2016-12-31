@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from . import db
 from .models import SequenceStep
 from utils import s_to_hms
 

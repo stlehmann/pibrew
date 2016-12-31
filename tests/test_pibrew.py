@@ -6,24 +6,32 @@ class PiBrewTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.app = create_app('testing')
-        cls.ctx = cls.app.app_context()
-        cls.ctx.push()
-        db.create_all()
-        cls.client = cls.app.test_client()
-        cls.process_interval = cls.app.config['PROCESS_INTERVAL']
+        pass
 
     @classmethod
     def tearDownClass(cls):
-        db.session.remove()
-        db.drop_all()
-        cls.ctx.pop()
+        pass
 
     def setUp(self):
+        brew_controller.initialized = False
+        self.app = create_app('testing')
+
+        self.ctx = self.app.app_context()
+        self.ctx.push()
+        db.create_all()
+
+        self.client = self.app.test_client()
+        self.process_interval = 1.2 * self.app.config['PROCESS_INTERVAL']
         self.client.get('/')
 
     def tearDown(self):
-        pass
+        brew_controller.stop()
+        while brew_controller.running:
+            pass
+
+        db.session.remove()
+        db.drop_all()
+        self.ctx.pop()
 
     def test_index(self):
         rv = self.client.get('/')
@@ -124,6 +132,24 @@ class PiBrewTest(unittest.TestCase):
 
         for key in ['t', 'temp_ct', 'temp_sp', 'ht_pwr']:
             self.assertIn(key, data)
+
+    def test_start_sequence(self):
+        client = socketio.test_client(self.app)
+        client.get_received()
+
+        # enable mixer
+        client.emit('start sequence')
+        received = client.get_received()
+        self.assertEqual('sequence started', received[0]['name'])
+
+    def test_stop_sequence(self):
+        client = socketio.test_client(self.app)
+        client.get_received()
+
+        # enable mixer
+        client.emit('stop sequence')
+        received = client.get_received()
+        self.assertEqual('sequence stopped', received[0]['name'])
 
 
 if __name__ == '__main__':

@@ -1,7 +1,9 @@
 import logging
 import sys
-from datetime import datetime
-from . import db
+import time
+import threading
+import arrow
+from . import db, socketio, process_data
 from .models import Setting
 from .hardware import HdwRaspberry, HdwSimulator
 from .controllers import TempController, PWM_DC
@@ -94,6 +96,8 @@ class BrewController():
         self.temp_ctrl_reset = False
         self.manual = False
         self.reset = False
+        self._stop = False
+        self._running = False
 
         self.settings = Settings(app)
 
@@ -113,10 +117,44 @@ class BrewController():
                                'simulation mode.')
                 self.hdw_interface = HdwSimulator()
 
-    def process(self):
-        # get current time to pass to the controllers
-        self.now = datetime.now()
+        # start thread
+        self.thread = threading.Thread(
+            target=self.run,
+            args=[app.config['PROCESS_INTERVAL']]
+        )
+        self.thread.setDaemon(True)
+        self._running = True
+        self.thread.start()
+        logger.info('started background thread')
 
+    def run(self, interval):
+        while not self._stop:
+            # get current time to pass to the controllers
+            self.now = arrow.now()
+            self.process()
+
+            data = {
+                't': self.now.format('YYYY-MM-DD HH:mm:ss.SSS'),
+                'temp_sp': '{:.1f}'.format(self.temp_setpoint),
+                'temp_ct': '{:.1f}'.format(self.temp_current),
+                'ht_en': self.heater_enabled,
+                'mx_en': self.mixer_enabled,
+                'ht_pwr': '{:.1f}'.format(self.heater_power_pct),
+                'ht_on': self.heater_on,
+                'sequence': self.sequence.get_data()
+            }
+
+            process_data['t'].append(data['t'])
+            process_data['temp_sp'].append(data['temp_sp'])
+            process_data['temp_ct'].append(data['temp_ct'])
+            process_data['ht_pwr'].append(data['ht_pwr'])
+
+            socketio.emit('update', data)
+            time.sleep(interval)
+
+        self._running = False
+
+    def process(self):
         # read the current temperature
         self.temp_current = self.hdw_interface.read_temp()
 
@@ -147,6 +185,13 @@ class BrewController():
         # set output of the heater according to the temperature controller
         self.hdw_interface.set_heater_output(heater_output)
         self.hdw_interface.set_mixer_output(self.mixer_enabled)
+
+    def stop(self):
+        self._stop = True
+
+    @property
+    def running(self):
+        return self._running
 
     # temp_setpoint property
     @property

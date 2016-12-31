@@ -1,6 +1,6 @@
 import unittest
-from datetime import datetime
-from pibrew import create_app, db
+import arrow
+from pibrew import create_app, db, brew_controller
 from pibrew.brewcontroller import BrewController
 from pibrew.models import SequenceStep
 import pibrew.sequence as seq
@@ -15,12 +15,18 @@ class DummyStep:
 class SequenceTestCase(unittest.TestCase):
 
     def setUp(self):
+        brew_controller.initialized = False
         self.app = create_app('testing')
+
         self.ctx = self.app.app_context()
         self.ctx.push()
         db.create_all()
-        self.brew_controller = BrewController(self.app)
-        self.sequence = self.brew_controller.sequence
+
+        self.client = self.app.test_client()
+        self.process_interval = self.app.config['PROCESS_INTERVAL']
+        self.client.get('/')
+
+        self.sequence = brew_controller.sequence
 
         steps = [
             SequenceStep(
@@ -46,6 +52,10 @@ class SequenceTestCase(unittest.TestCase):
         db.session.commit()
 
     def tearDown(self):
+        brew_controller.stop()
+        while brew_controller.running:
+            pass
+
         db.session.remove()
         db.drop_all()
         self.ctx.pop()
@@ -54,21 +64,21 @@ class SequenceTestCase(unittest.TestCase):
         s = self.sequence
         self.assertEqual(seq.STATE_STOPPED, s.state)
         s.start()
-        s.process(50.0, datetime.now())
+        s.process(50.0, arrow.now())
         self.assertEqual(seq.STATE_RUNNING, s.state)
         s.pause()
-        s.process(50.0, datetime.now())
+        s.process(50.0, arrow.now())
         self.assertEqual(seq.STATE_PAUSED, s.state)
         s.stop()
-        s.process(50.0, datetime.now())
+        s.process(50.0, arrow.now())
         self.assertEqual(seq.STATE_STOPPED, s.state)
 
         self.assertEqual(0, s.cur_step_index)
         s.fwd()
-        s.process(50.0, datetime.now())
+        s.process(50.0, arrow.now())
         self.assertEqual(1, s.cur_step_index)
         s.bwd()
-        s.process(50.0, datetime.now())
+        s.process(50.0, arrow.now())
         self.assertEqual(0, s.cur_step_index)
 
 
