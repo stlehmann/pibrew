@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from . import db
 from .models import SequenceStep
+from utils import s_to_hms
 
 ACTION_START = 1
 ACTION_STOP = 2
@@ -13,10 +14,53 @@ STATE_RUNNING = 1
 STATE_PAUSED = 2
 STATE_FINISHED = 3
 
-STEP_STATE_NOTHING = 0
-STEP_STATE_HEATING = 1
-STEP_STATE_HOLDING = 2
-STEP_STATE_FINISHED = 3
+
+class Step:
+
+    STATE_WAITING = 0
+    STATE_HEATING = 1
+    STATE_HOLDING = 2
+    STATE_FINISHED = 3
+
+    def __init__(self, sequence, sequence_step: SequenceStep):
+        self.sequence = sequence
+        self.brew_ctl = sequence.brew_ctl
+        self.state = self.STATE_WAITING
+        self.passed_seconds = 0
+        self.id = sequence_step.id
+        self.duration = sequence_step.duration
+        self.tolerance = sequence_step.tolerance
+        self.temperature = sequence_step.temperature
+        self.heater = sequence_step.heater
+        self.mixer = sequence_step.mixer
+
+    def process(self, dt_s: float, temperature):
+        if self.state == self.STATE_WAITING:
+            self.brew_ctl.temp_setpoint = self.temperature
+            self.brew_ctl.heater_enabled = self.heater
+            self.brew_ctl.mixer_enabled = self.mixer
+            self.state = self.STATE_HEATING
+
+        # HEATING until setpoint is reached
+        elif self.state == self.STATE_HEATING:
+            if temperature >= (self.temperature - self.tolerance):
+                self.state = self.STATE_HOLDING
+
+        # HOLD temperature for time
+        elif self.state == self.STATE_HOLDING:
+            if self.passed_seconds < self.duration:
+                self.passed_seconds += dt_s
+            else:
+                self.state = self.STATE_FINISHED
+
+        elif self.state == self.STATE_FINISHED:
+            if self.step_index < len(self.steps) - 1:
+                self.state = self.STATE_WAITING
+                self.step_index += 1
+            else:
+                self.state = self.STATE_FINISHED
+
+        return self.state
 
 
 class Sequence:
@@ -25,20 +69,17 @@ class Sequence:
         self.app = app
         self.brew_ctl = brew_ctl
         self.steps = []
+        self.cur_step_index = -1
         self.start_time = None
-        self.step_index = None
         self.time_total = timedelta()
-        self.time_cur_step = timedelta()
-        self.time_prev = None
-        self.cur_step_state = STEP_STATE_NOTHING
+        self.prev_time = None
         self.pending_actions = []
         self.state = STATE_STOPPED
 
-    def update_steps(self):
+    def create_steps(self):
         with self.app.app_context():
-            self.steps = SequenceStep.query.order_by(SequenceStep.order).all()
-            [db.session.expunge(x) for x in self.steps]
-            self.step_index = None
+            steps = SequenceStep.query.order_by(SequenceStep.order).all()
+            return [Step(self, x) for x in steps]
 
     def start(self):
         self.pending_actions.append(ACTION_START)
@@ -55,7 +96,15 @@ class Sequence:
     def fwd(self):
         self.pending_actions.append(ACTION_FWD)
 
+    @property
+    def cur_step(self):
+        return self.steps[self.cur_step_index]
+
     def process(self, temperature: float, cur_time: datetime):
+        if self.prev_time is None:
+            self.prev_time = cur_time
+
+        dt_s = (cur_time - self.prev_time).total_seconds()
 
         # process all pending actions
         while len(self.pending_actions):
@@ -63,9 +112,9 @@ class Sequence:
 
             if action == ACTION_START:
                 if self.state == STATE_STOPPED:
-                    self.update_steps()
+                    self.steps = self.create_steps()
                     if len(self.steps):
-                        self.step_index = 0
+                        self.cur_step_index = 0
                         self.start_time = cur_time
                         self.state = STATE_RUNNING
 
@@ -76,13 +125,13 @@ class Sequence:
                 if self.state == STATE_RUNNING:
                     self.state = STATE_PAUSED
 
-            elif (action == ACTION_FWD and len(self.steps) and
-                    self.step_index < len(self.steps) - 1):
-                self.step_index += 1
+            elif (action == ACTION_FWD and
+                    self.cur_step_index < len(self.steps) - 1):
+                self.cur_step_index += 1
 
-            elif (action == ACTION_BWD and len(self.steps) and
-                    self.step_index > 0):
-                self.step_index -= 1
+            elif (action == ACTION_BWD and
+                    self.cur_step_index > 0):
+                self.cur_step_index -= 1
 
         # time counter for the whole sequence
         if self.state not in (STATE_FINISHED, STATE_STOPPED):
@@ -90,45 +139,28 @@ class Sequence:
 
         # state handling
         if self.state == STATE_RUNNING:
-            cur_step = self.steps[self.step_index]
 
-            if self.cur_step_state == STEP_STATE_NOTHING:
-                self.time_cur_step = timedelta(seconds=0)
-                self.brew_ctl.temp_setpoint = cur_step.temperature
-                self.brew_ctl.heater_enabled = cur_step.heater
-                self.brew_ctl.mixer_enabled = cur_step.mixer
-                self.cur_step_state = STEP_STATE_HEATING
+            # process current step
+            step_state = self.cur_step.process(dt_s, temperature)
 
-            # HEATING until setpoint is reached
-            if self.cur_step_state == STEP_STATE_HEATING:
-                if temperature >= (cur_step.temperature - cur_step.tolerance):
-                    self.cur_step_state = STEP_STATE_HOLDING
-
-            # HOLD temperature for time
-            elif self.cur_step_state == STEP_STATE_HOLDING:
-                if (self.time_cur_step.total_seconds() <
-                        self.steps[self.step_index].duration):
-                    self.time_cur_step += cur_time - self.time_prev
-                else:
-                    self.cur_step_state = STEP_STATE_FINISHED
-
-            elif self.cur_step_state == STEP_STATE_FINISHED:
-                if self.step_index < len(self.steps):
-                    self.cur_step_state = STEP_STATE_NOTHING
-                    self.step_index += 1
+            if step_state == Step.STATE_FINISHED:
+                if self.cur_step_index < len(self.steps) - 1:
+                    self.cur_step_index += 1
                 else:
                     self.state = STATE_FINISHED
 
-        self.time_prev = cur_time
+        self.prev_time = cur_time
 
     def get_data(self):
         if self.state == STATE_RUNNING:
             return {
                 'state': self.state,
-                'cur_step_state': self.cur_step_state,
-                'cur_step_id': self.steps[self.step_index].id,
+                'cur_step_state': self.cur_step.state,
+                'cur_step_id': self.cur_step.id,
                 'time_total': '{}'.format(self.time_total),
-                'time_cur_step': '{}'.format(self.time_cur_step)
+                'time_cur_step': '{:02}:{:02}:{:02}'.format(
+                    *map(int, s_to_hms(self.cur_step.passed_seconds))
+                )
             }
         else:
             return {

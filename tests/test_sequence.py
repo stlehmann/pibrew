@@ -63,13 +63,13 @@ class SequenceTestCase(unittest.TestCase):
         s.process(50.0, datetime.now())
         self.assertEqual(seq.STATE_STOPPED, s.state)
 
-        self.assertEqual(0, s.cur_step_id)
+        self.assertEqual(0, s.cur_step_index)
         s.fwd()
         s.process(50.0, datetime.now())
-        self.assertEqual(1, s.cur_step_id)
+        self.assertEqual(1, s.cur_step_index)
         s.bwd()
         s.process(50.0, datetime.now())
-        self.assertEqual(0, s.cur_step_id)
+        self.assertEqual(0, s.cur_step_index)
 
 
 if __name__ == '__main__':

@@ -70,6 +70,7 @@
         else {
           $('.step-action').show();
         }
+        $('#state').text(data['temp_ct'] + ' °C');
       });
 
     });
@@ -125,12 +126,15 @@
           <div class="panel-body">
             <div class="container">
               <div class="row">
-                <div class="col-6-xs">
+                <div class="col-xs-6">
                   <button id="seqBwdBtn" class="btn btn-default"><span class="glyphicon glyphicon-step-backward"></span></button>
                   <button id="seqStartBtn" class="btn btn-default"><span class="glyphicon glyphicon-play"></span></button>
                   <button id="seqPauseBtn" class="btn btn-default" disabled><span class="glyphicon glyphicon-pause"></span></button>
                   <button id="seqStopBtn" class="btn btn-default"><span class="glyphicon glyphicon-stop"></span></button>
                   <button id="seqFwdBtn" class="btn btn-default"><span class="glyphicon glyphicon-step-forward"></span></button>
+                </div>
+                <div class="col-xs-6">
+                  <p id="state"> </p>
                 </div>
               </div>
             </div>
