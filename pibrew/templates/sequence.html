@@ -59,6 +59,19 @@
         $('#seqStartBtn').removeClass('active');
       });
 
+      socket.on('update', function(data) {
+        var seq = data['sequence'];
+        if (seq['state'] > 0) {
+          var row_id = '#stepRow' + seq['cur_step_id'];
+          $('.step-action').hide();
+          $(row_id).addClass('active');
+          $(row_id + ' td').eq(3).text(seq['time_cur_step']);
+        }
+        else {
+          $('.step-action').show();
+        }
+      });
+
     });
   </script>
 {% endblock %}
@@ -67,7 +80,7 @@
   <div class="container">
     <div class="row">
       <div class="col-xs-12">
-        <a class="btn btn-default" href="{{ url_for('main.add_step') }}">Schritt hinzufügen</a>
+        <a class="btn btn-default step-action" href="{{ url_for('main.add_step') }}">Schritt hinzufügen</a>
       </div>
     </div>
     <br/>
@@ -84,11 +97,11 @@
           <th></th>
 
           {% for step in steps %}
-          <tr data-step-id="{{ step.id }}">
+          <tr id="stepRow{{ step.id }}" data-step-id="{{ step.id }}">
             <td>
-              <a class="step-up-btn" href=""><span class="glyphicon glyphicon-arrow-up"></span></a>
-              <a class="step-down-btn" href=""><span class="glyphicon glyphicon-arrow-down"></span></a>
-              <a class="edit-step" href="{{ url_for('main.edit_step', step_id=step.id) }}"><span class="glyphicon glyphicon-edit"></span></a>
+              <a class="step-action step-up-btn" href=""><span class="glyphicon glyphicon-arrow-up"></span></a>
+              <a class="step-action step-down-btn" href=""><span class="glyphicon glyphicon-arrow-down"></span></a>
+              <a class="step-action edit-step" href="{{ url_for('main.edit_step', step_id=step.id) }}"><span class="glyphicon glyphicon-edit"></span></a>
             </td>
             <td>{{ step.name }}</td>
             <td>{{ step.temperature }}</td>
@@ -97,7 +110,7 @@
             <td>{{ step.heater }}</td>
             <td>{{ step.mixer }}</td>
             <td>
-              <a class="del-step-btn" href="">
+              <a class="del-step-btn step-action" href="">
                 <span class="glyphicon glyphicon-trash"></span>
               </a>
             </td>

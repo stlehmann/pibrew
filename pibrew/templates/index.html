@@ -3,6 +3,12 @@
 
 {% block scripts %}
 {{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='bower_components/jqwidgets/jqwidgets/styles/jqx.base.css') }}">
+<script src="{{ url_for('static', filename='bower_components/plotlyjs/plotly.js') }}"></script>
+<script src="{{ url_for('static', filename='bower_components/jqwidgets/jqwidgets/jqxcore.js') }}"></script>
+<script src="{{ url_for('static', filename='bower_components/jqwidgets/jqwidgets/jqxchart.js') }}"></script>
+<script src="{{ url_for('static', filename='bower_components/jqwidgets/jqwidgets/jqxgauge.js') }}"></script>
+
 <script>
   var data_setpoint = {name: 'Sollwert[°C]', type: 'scatter', x: [], y: []};
   var data_temp = {name: 'Temperatur [°C]', type: 'scatter', x: [], y:[]};
@@ -142,6 +148,7 @@
       data_pwr['x'] = data['t'].slice();
       data_pwr['y'] = data['ht_pwr'].slice();
       loading = false;
+      Plotly.redraw(chart);
     });
 
     // Update current process data
@@ -162,9 +169,6 @@
         // add setpoint data point
         data_pwr.x.push(data['t']);
         data_pwr.y.push(data['ht_pwr']);
-
-        // Refresh plot
-        Plotly.redraw(chart);
       }
 
       // Refresh Gauge
@@ -183,6 +187,10 @@
     socket.on('setpoint changed', function(data) {
       $('#temp_setpoint').val(data['value']);
     });
+
+    var refresh_id = setInterval(function() {
+      Plotly.redraw(chart);
+    }, 5000);
 
   });
 </script>

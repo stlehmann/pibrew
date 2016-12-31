@@ -4,15 +4,8 @@
 {% block scripts %}
 {{ super() }}
 <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='bower_components/jqwidgets/jqwidgets/styles/jqx.base.css') }}">
-
 <script src="{{ url_for('static', filename='bower_components/jquery/dist/jquery.js') }}"></script>
 <script src="{{ url_for('static', filename='bower_components/socket.io-client/dist/socket.io.js') }}"></script>
-<script src="{{ url_for('static', filename='bower_components/plotlyjs/plotly.js') }}"></script>
-
-<script src="{{ url_for('static', filename='bower_components/jqwidgets/jqwidgets/jqxcore.js') }}"></script>
-<script src="{{ url_for('static', filename='bower_components/jqwidgets/jqwidgets/jqxchart.js') }}"></script>
-<script src="{{ url_for('static', filename='bower_components/jqwidgets/jqwidgets/jqxgauge.js') }}"></script>
 
 <script>
   // Establish socketio connection
