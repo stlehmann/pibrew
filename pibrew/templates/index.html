@@ -4,78 +4,30 @@
 {% block scripts %}
 {{ super() }}
 <link rel="stylesheet" href="{{ url_for('static', filename='bower_components/jqwidgets/jqwidgets/styles/jqx.base.css') }}">
-<script src="{{ url_for('static', filename='bower_components/plotlyjs/plotly.js') }}"></script>
 <script src="{{ url_for('static', filename='bower_components/jqwidgets/jqwidgets/jqxcore.js') }}"></script>
 <script src="{{ url_for('static', filename='bower_components/jqwidgets/jqwidgets/jqxchart.js') }}"></script>
 <script src="{{ url_for('static', filename='bower_components/jqwidgets/jqwidgets/jqxgauge.js') }}"></script>
 
 <script>
-  var data_setpoint = {name: 'Sollwert[°C]', type: 'scatter', x: [], y: []};
-  var data_temp = {name: 'Temperatur [°C]', type: 'scatter', x: [], y:[]};
-  var data_pwr = {name: 'Leistung [%]', type: 'scatter', x: [], y: []};
-  var loading = false;
+  // ----------------------------------------------
+  // Constants
+  // ----------------------------------------------
+  const SEQ_STATE_STOPPED = 0;
+  const SEQ_STATE_RUNNING = 1;
+  const SEQ_STATE_PAUSED = 2;
+  const SEQ_STATE_FINISHED = 3;
 
-  var layout_lg = {
-    margin: {
-        l: 60,
-        r: 0,
-        b: 100,
-        t: 0,
-        pad: 4
-    },
-    height: 400,
-    yaxis: {
-      title: '°C',
-      range: [0, 100]
-    },
-    legend: {
-      x: 0.02,
-      y: 1.02,
-      traceorder: 'normal',
-      font: {
-        family: 'sans-serif',
-        size: 12,
-        color: '#000'
-      },
-      bordercolor: '#FFFFFF',
-      borderwidth: 2
-    }
-  };
-
-  var layout_sm = {
-    margin: {
-      l: 30,
-      r: 0,
-      b: 80,
-      t: 0,
-      pad: 4
-    },
-    height: 300,
-    yaxis: {
-      title: '',
-      range: [0, 100]
-    },
-    legend: {
-      x: 0.02,
-      y: 1.02,
-      traceorder: 'normal',
-      font: {
-        family: 'sans-serif',
-        size: 12,
-        color: '#000'
-      },
-      bordercolor: '#FFFFFF',
-      borderwidth: 2
-    }
-  };
-  var layout = layout_lg;
+  const STEP_STATE_WAITING = 0;
+  const STEP_STATE_HEATING = 1;
+  const STEP_STATE_HOLDING = 2;
+  const STEP_STATE_FINISHED = 3;
+  const STEP_STATE_SKIPPED = 4;
 
   $(document).ready(function() {
 
     // ----------------------------------------------
-    // Plotly initialization
+    // Linear Gauge initialization
     // ----------------------------------------------
-    // gauge init
     jqxLinearGauge($('#gauge'), {
         max: 100,
         min: 0,
@@ -104,78 +56,68 @@
       }
     });
 
-    var chart = $('#chart').get(0);
-
-    if (window.innerWidth <= 767) {
-      layout = layout_sm;
-    }
-    else {
-      layout = layout_lg;
-    };
-
-    Plotly.plot(
-      chart,
-      [data_setpoint, data_temp, data_pwr],
-      layout,
-      {
-        displayModeBar: false,
-        staticPlot: true
-      }
-    );
-
-    $(window).resize(function() {
-      Plotly.Plots.resize(chart);
-    });
-
     // ----------------------------------------------
     // SocketIO event handling
     // ----------------------------------------------
-    // Test event to query if connection ok
-    socket.on('connect', function() {
-      loading = true;
-      socket.emit('load data');
-    });
-
-    // load init data
-    socket.on('init data', function(data) {
-      // current temperature
-      data_temp['x'] = data['t'].slice();
-      data_temp['y'] = data['temp_ct'].slice();
-      // temperature setpoint
-      data_setpoint['x'] = data['t'].slice();
-      data_setpoint['y'] = data['temp_sp'].slice();
-      // heating power
-      data_pwr['x'] = data['t'].slice();
-      data_pwr['y'] = data['ht_pwr'].slice();
-      loading = false;
-      Plotly.redraw(chart);
-    });
-
     // Update current process data
     socket.on('update', function(data) {
-
+      // Update gauge and power
       $('#temp_current').val(data['temp_ct']);
       $('#heater_power_pct').val(data['ht_pwr']);
-
-      if (!loading) {
-        // add temperature data point
-        data_temp.x.push(data['t']);
-        data_temp.y.push(data['temp_ct']);
-
-        // add setpoint data point
-        data_setpoint.x.push(data['t']);
-        data_setpoint.y.push(data['temp_sp']);
-
-        // add setpoint data point
-        data_pwr.x.push(data['t']);
-        data_pwr.y.push(data['ht_pwr']);
-      }
 
       // Refresh Gauge
       jqxLinearGauge($('#gauge'), {'value': data['temp_ct']});
 
+      // Update flame state
       var vis_state = data['ht_on'] ? 'visible' : 'hidden';
       $('#flame').css('visibility', vis_state);
+
+      // Update sequence data
+      var seq = data['sequence'];
+      if (seq['state'] > SEQ_STATE_STOPPED) {
+
+        // Set state of all steps
+        for (var step_id in seq['step_states']) {
+          var row_id = '#stepRow' + step_id;
+          var state = seq['step_states'][step_id];
+
+          if (state == STEP_STATE_FINISHED) {
+            $(row_id).removeClass('active danger');
+            $(row_id).addClass('success');
+            $(row_id + ' .glyphicon-ok').show();
+            $(row_id + ' .glyphicon-arrow-right').hide();
+          }
+          else if (state == STEP_STATE_SKIPPED) {
+            $(row_id).removeClass('active success');
+            $(row_id).addClass('danger');
+            $(row_id + ' .glyphicon-ok').hide();
+            $(row_id + ' .glyphicon-arrow-right').hide();
+          }
+          else if ($.inArray(state, [STEP_STATE_HEATING, STEP_STATE_HOLDING]) > -1) {
+            $(row_id + ' .glyphicon-ok').hide();
+            $(row_id + ' .glyphicon-arrow-right').show();
+          }
+          else if (state == STEP_STATE_WAITING) {
+            $(row_id).removeClass('active success');
+            $(row_id).removeClass('danger');
+            $(row_id + ' .glyphicon-ok').hide();
+            $(row_id + ' .glyphicon-arrow-right').hide();
+          }
+        }
+
+        // Get row id of current step and mark it as current
+        var row_id = '#stepRow' + seq['cur_step_id'];
+
+        $('.step-action').hide();
+        $(row_id).addClass('active');
+        $(row_id + ' td').eq(3).text(seq['time_cur_step']);
+
+      }
+      else {
+        $('.step-action').show();
+      }
+
+      $('#state').text(data['temp_ct'] + ' °C' + '  ' + seq['time_total']);
 
     });
 
@@ -188,54 +130,159 @@
       $('#temp_setpoint').val(data['value']);
     });
 
-    var refresh_id = setInterval(function() {
-      Plotly.redraw(chart);
-    }, 5000);
+    // Delete step
+    $('.del-step-btn').click(function() {
+      var step_id = $(this).parents('tr').data('step-id');
+      $.ajax({
+        url: $SCRIPT_ROOT + '/sequence/steps/' + step_id + '/delete',
+        type: 'DELETE'
+      }).done(function(data) {
+        location.reload();
+      });
+    });
 
+    // Move step up
+    $('.step-up-btn').click(function() {
+      var step_id = $(this).parents('tr').data('step-id');
+      $.ajax({
+        url: $SCRIPT_ROOT + '/sequence/steps/' + step_id + '/up',
+        type: 'POST'
+      }).donw(function(data) {
+        location.reload();
+      });
+    });
+
+    // Move step down
+    $('.step-down-btn').click(function() {
+      var step_id = $(this).parents('tr').data('step-id');
+      $.ajax({
+        url: $SCRIPT_ROOT + '/sequence/steps/' + step_id + '/down',
+        type: 'POST'
+      }).donw(function(data) {
+        location.reload();
+      });
+    });
+
+    // Signal to start sequence
+    $('#seqStartBtn').click(function() {
+      socket.emit('start sequence');
+    });
+
+    socket.on('sequence started', function() {
+      $('#seqStartBtn').addClass('active');
+    });
+
+    // Signal to stop sequence
+    $('#seqStopBtn').click(function() {
+      socket.emit('stop sequence');
+    });
+
+    socket.on('sequence stopped', function() {
+      $('#seqStartBtn').removeClass('active');
+    });
   });
 </script>
 {% endblock %}
 
 
 {% block content %}
-  <div class="container">
+<div class="container">
+  <div class="row">
+    <div class="col-xs-12">
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-sm-4">
+      <div class="visu-container">
+        <img id="pot" src="{{ url_for('static', filename='einkocher.jpg') }}">
+        <img id="flame" src="{{ url_for('static', filename='flame.png') }}">
+        <div id="gauge"></div>
+      </div>
+    </div>
+    <div class="col-sm-8">
+      <form class="form">
+        <div class="form-group">
+          <label>Temperatur (Soll):</label>
+          <div class="input-group">
+            <input type="number" class="form-control" id="temp_setpoint" value={{ '{:.1f}'.format(temp_setpoint) }} min=0 max=100>
+            <span class="input-group-btn">
+              <button type="submit" id="acceptSetpointButton" class="btn btn-primary">OK</button>
+            </span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Temperatur (Ist):</label>
+          <input type="number" step=0.1 class="form-control" id="temp_current" disabled value={{ '{:.1f}'.format(temp_current) }}></p>
+        </div>
+        <div class="form-group">
+          <label>Heizleistung (%):</label>
+          <input type="number" step=0.1 class="form-control" id="heater_power_pct" disabled value={{ '{:.1f}'.format(heater_power_pct) }}></p>
+        </div>
+      </form>
+    </div>
     <div class="row">
       <div class="col-xs-12">
+        <a class="btn btn-default step-action" href="{{ url_for('main.add_step') }}">Schritt hinzufügen</a>
+      </div>
+    </div>
+    <br/>
+    <div class="row">
+      <div class="col-xs-12">
+        <table class="table">
+          <th></th>
+          <th>Name</th>
+          <th>Temperatur</th>
+          <th>Dauer</th>
+          <th>Toleranz</th>
+          <th>Heizung</th>
+          <th>Mixer</th>
+          <th></th>
+
+          {% for step in steps %}
+          <tr id="stepRow{{ step.id }}" data-step-id="{{ step.id }}">
+            <td>
+              <a class="step-action step-up-btn" href=""><span class="glyphicon glyphicon-arrow-up"></span></a>
+              <a class="step-action step-down-btn" href=""><span class="glyphicon glyphicon-arrow-down"></span></a>
+              <a class="step-action edit-step" href="{{ url_for('main.edit_step', step_id=step.id) }}"><span class="glyphicon glyphicon-edit"></span></a>
+              <span class="glyphicon glyphicon-ok" style="display: none;"></span>
+              <span class="glyphicon glyphicon-arrow-right" style="display: none;"></span>
+            </td>
+            <td>{{ step.name }}</td>
+            <td>{{ step.temperature }}</td>
+            <td>{{ step.duration_formatted() }}</td>
+            <td>{{ step.tolerance }}</td>
+            <td>{{ step.heater }}</td>
+            <td>{{ step.mixer }}</td>
+            <td>
+              <a class="del-step-btn step-action" href="">
+                <span class="glyphicon glyphicon-trash"></span>
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </table>
       </div>
     </div>
     <div class="row">
-      <div class="col-sm-4">
-        <div class="visu-container">
-          <img id="pot" src="{{ url_for('static', filename='einkocher.jpg') }}">
-          <img id="flame" src="{{ url_for('static', filename='flame.png') }}">
-          <div id="gauge"></div>
-        </div>
-      </div>
-      <div class="col-sm-8">
-        <form class="form">
-          <div class="form-group">
-            <label>Temperatur (Soll):</label>
-            <div class="input-group">
-              <input type="number" class="form-control" id="temp_setpoint" value={{ '{:.1f}'.format(temp_setpoint) }} min=0 max=100>
-              <span class="input-group-btn">
-                <button type="submit" id="acceptSetpointButton" class="btn btn-primary">OK</button>
-              </span>
+      <div class="col-xs-12">
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="container">
+              <div class="row">
+                <div class="col-xs-6">
+                  <button id="seqBwdBtn" class="btn btn-default"><span class="glyphicon glyphicon-step-backward"></span></button>
+                  <button id="seqStartBtn" class="btn btn-default"><span class="glyphicon glyphicon-play"></span></button>
+                  <button id="seqPauseBtn" class="btn btn-default" disabled><span class="glyphicon glyphicon-pause"></span></button>
+                  <button id="seqStopBtn" class="btn btn-default"><span class="glyphicon glyphicon-stop"></span></button>
+                  <button id="seqFwdBtn" class="btn btn-default"><span class="glyphicon glyphicon-step-forward"></span></button>
+                </div>
+                <div class="col-xs-6">
+                  <p id="state"> </p>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="form-group">
-            <label>Temperatur (Ist):</label>
-            <input type="number" step=0.1 class="form-control" id="temp_current" disabled value={{ '{:.1f}'.format(temp_current) }}></p>
-          </div>
-          <div class="form-group">
-            <label>Heizleistung (%):</label>
-            <input type="number" step=0.1 class="form-control" id="heater_power_pct" disabled value={{ '{:.1f}'.format(heater_power_pct) }}></p>
-          </div>
-        </form>
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-xs-12">
-        <div id="chart"></div>
+        </div>
       </div>
     </div>
   </div>

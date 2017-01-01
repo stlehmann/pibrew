@@ -201,6 +201,7 @@ class BrewController():
     @temp_setpoint.setter
     def temp_setpoint(self, value):
         self.settings.temp_setpoint = value
+        socketio.emit('setpoint changed', {'value': value})
 
     # manual_power_pct property
     @property

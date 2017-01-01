@@ -50,6 +50,8 @@ class StepForm(FlaskForm):
 
 @main.route('/')
 def index():
+    steps = SequenceStep.query.order_by(SequenceStep.order).all()
+    [db.session.expunge(step) for step in steps]
     return render_template(
         'index.html',
         temp_setpoint=brew_controller.temp_setpoint,
@@ -57,13 +59,13 @@ def index():
         heater_enabled=brew_controller.heater_enabled,
         mixer_enabled=brew_controller.mixer_enabled,
         heater_power_pct=brew_controller.heater_power_pct,
+        steps=steps
     )
 
 
-@main.route('sequence/', methods=['GET', 'POST'])
-def sequence():
-    steps = SequenceStep.query.order_by(SequenceStep.order).all()
-    return render_template('sequence.html', steps=steps)
+@main.route('plot/')
+def plot():
+    return render_template('plot.html')
 
 
 @main.route('sequence/steps/add', methods=['GET', 'POST'])
@@ -81,7 +83,7 @@ def add_step():
                 step.mixer = form.mixer.data
                 db.session.add(step)
                 db.session.commit()
-        return redirect(url_for('main.sequence'))
+        return redirect(url_for('main.index'))
     return render_template('step.html', form=form)
 
 
@@ -100,7 +102,7 @@ def edit_step(step_id):
                 step.mixer = form.mixer.data
                 db.session.add(step)
                 db.session.commit()
-        return redirect(url_for('main.sequence'))
+        return redirect(url_for('main.index'))
     else:
         form.name.data = step.name
         form.duration.data = step.duration

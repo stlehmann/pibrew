@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+
+{% block scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='bower_components/plotlyjs/plotly.js') }}"></script>
+
+<script>
+  var data_setpoint = {name: 'Sollwert[°C]', type: 'scatter', x: [], y: []};
+  var data_temp = {name: 'Temperatur [°C]', type: 'scatter', x: [], y:[]};
+  var data_pwr = {name: 'Leistung [%]', type: 'scatter', x: [], y: []};
+  var loading = false;
+
+  var layout_lg = {
+    margin: {
+        l: 60,
+        r: 0,
+        b: 100,
+        t: 0,
+        pad: 4
+    },
+    height: 400,
+    yaxis: {
+      title: '°C',
+      range: [0, 100]
+    },
+    legend: {
+      x: 0.02,
+      y: 1.02,
+      traceorder: 'normal',
+      font: {
+        family: 'sans-serif',
+        size: 12,
+        color: '#000'
+      },
+      bordercolor: '#FFFFFF',
+      borderwidth: 2
+    }
+  };
+
+  var layout_sm = {
+    margin: {
+      l: 30,
+      r: 0,
+      b: 80,
+      t: 0,
+      pad: 4
+    },
+    height: 300,
+    yaxis: {
+      title: '',
+      range: [0, 100]
+    },
+    legend: {
+      x: 0.02,
+      y: 1.02,
+      traceorder: 'normal',
+      font: {
+        family: 'sans-serif',
+        size: 12,
+        color: '#000'
+      },
+      bordercolor: '#FFFFFF',
+      borderwidth: 2
+    }
+  };
+  var layout = layout_lg;
+
+  $(document).ready(function() {
+    var chart = $('#chart').get(0);
+
+    if (window.innerWidth <= 767) {
+      layout = layout_sm;
+    }
+    else {
+      layout = layout_lg;
+    };
+
+    Plotly.plot(
+      chart,
+      [data_setpoint, data_temp, data_pwr],
+      layout,
+      {
+        displayModeBar: false,
+        staticPlot: true
+      }
+    );
+
+    $(window).resize(function() {
+      Plotly.Plots.resize(chart);
+    });
+
+    // ----------------------------------------------
+    // SocketIO event handling
+    // ----------------------------------------------
+    // Test event to query if connection ok
+    socket.on('connect', function() {
+      loading = true;
+      socket.emit('load data');
+    });
+
+    // load init data
+    socket.on('init data', function(data) {
+      // current temperature
+      data_temp['x'] = data['t'].slice();
+      data_temp['y'] = data['temp_ct'].slice();
+      // temperature setpoint
+      data_setpoint['x'] = data['t'].slice();
+      data_setpoint['y'] = data['temp_sp'].slice();
+      // heating power
+      data_pwr['x'] = data['t'].slice();
+      data_pwr['y'] = data['ht_pwr'].slice();
+      loading = false;
+      Plotly.redraw(chart);
+    });
+
+    socket.on('update', function(data) {
+      if (!loading) {
+        // add temperature data point
+        data_temp.x.push(data['t']);
+        data_temp.y.push(data['temp_ct']);
+
+        // add setpoint data point
+        data_setpoint.x.push(data['t']);
+        data_setpoint.y.push(data['temp_sp']);
+
+        // add setpoint data point
+        data_pwr.x.push(data['t']);
+        data_pwr.y.push(data['ht_pwr']);
+      }
+    });
+
+    var refresh_id = setInterval(function() {
+      Plotly.redraw(chart);
+    }, 5000);
+  });
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col-xs-12">
+      <div id="chart"></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
