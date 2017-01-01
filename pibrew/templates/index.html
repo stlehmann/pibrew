@@ -80,6 +80,9 @@
         for (var step_id in seq['step_states']) {
           var row_id = '#stepRow' + step_id;
           var state = seq['step_states'][step_id];
+          var time = seq['step_times'][step_id];
+
+          $(row_id + ' td').eq(3).text(time);
 
           if (state == STEP_STATE_FINISHED) {
             $(row_id).removeClass('active danger');
@@ -94,12 +97,13 @@
             $(row_id + ' .glyphicon-arrow-right').hide();
           }
           else if ($.inArray(state, [STEP_STATE_HEATING, STEP_STATE_HOLDING]) > -1) {
+            $(row_id).addClass('active');
+            $(row_id).removeClass('danger success');
             $(row_id + ' .glyphicon-ok').hide();
             $(row_id + ' .glyphicon-arrow-right').show();
           }
           else if (state == STEP_STATE_WAITING) {
-            $(row_id).removeClass('active success');
-            $(row_id).removeClass('danger');
+            $(row_id).removeClass('active success danger');
             $(row_id + ' .glyphicon-ok').hide();
             $(row_id + ' .glyphicon-arrow-right').hide();
           }
@@ -110,16 +114,43 @@
 
         $('.step-action').hide();
         $(row_id).addClass('active');
-        $(row_id + ' td').eq(3).text(seq['time_cur_step']);
 
       }
       else {
         $('.step-action').show();
       }
 
-      $('#state').text(data['temp_ct'] + ' °C' + '  ' + seq['time_total']);
+      // Set visible buttons depending on sequence state
+      switch (seq['state']) {
+        case SEQ_STATE_STOPPED:
+          $('#seqStartBtn').removeClass('active');
+          $('#seqPauseBtn').removeClass('active');
+          $('#seqStartBtn').prop('disabled', false);
+          $('#seqStopBtn').prop('disabled', true);
+          $('#seqPauseBtn').prop('disabled', true);
+          break;
 
+        case SEQ_STATE_RUNNING:
+          $('#seqStartBtn').addClass('active');
+          $('#seqPauseBtn').removeClass('active');
+          $('#seqStartBtn').prop('disabled', true);
+          $('#seqStopBtn').prop('disabled', false);
+          $('#seqPauseBtn').prop('disabled', false);
+          break;
+
+        case SEQ_STATE_PAUSED:
+          $('#seqStartBtn').removeClass('active');
+          $('#seqPauseBtn').addClass('active');
+
+          $('#seqStartBtn').prop('disabled', false);
+          $('#seqStopBtn').prop('disabled', false);
+          $('#seqPauseBtn').prop('disabled', true);
+          break;
+      };
+
+      $('#state').text(data['temp_ct'] + ' °C' + '  ' + seq['time_total']);
     });
+
 
     // set setpoint
     $('#acceptSetpointButton').click(function(event) {
@@ -168,18 +199,26 @@
       socket.emit('start sequence');
     });
 
-    socket.on('sequence started', function() {
-      $('#seqStartBtn').addClass('active');
-    });
-
     // Signal to stop sequence
     $('#seqStopBtn').click(function() {
       socket.emit('stop sequence');
     });
 
-    socket.on('sequence stopped', function() {
-      $('#seqStartBtn').removeClass('active');
+    // Signal to pause sequence
+    $('#seqPauseBtn').click(function() {
+      socket.emit('pause sequence');
     });
+
+    // Signal to skip step
+    $('#seqFwdBtn').click(function() {
+      socket.emit('next step')
+    });
+
+    // Signal to skip step
+    $('#seqBwdBtn').click(function() {
+      socket.emit('previous step')
+    });
+
   });
 </script>
 {% endblock %}
@@ -195,7 +234,7 @@
     <div class="col-sm-4">
       <div class="visu-container">
         <img id="pot" src="{{ url_for('static', filename='einkocher.jpg') }}">
-        <img id="flame" src="{{ url_for('static', filename='flame.png') }}">
+        <img id="flame" src="{{ url_for('static', filename='flame.png') }}" style="display: none;">
         <div id="gauge"></div>
       </div>
     </div>

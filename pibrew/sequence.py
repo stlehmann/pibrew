@@ -56,6 +56,11 @@ class Step:
 
         return self.state
 
+    def formatted_time(self):
+        return '{:02}:{:02}:{:02}'.format(
+            *map(int, s_to_hms(max(0, self.duration - self.passed_seconds)))
+        )
+
 
 class Sequence:
 
@@ -111,6 +116,8 @@ class Sequence:
                         self.cur_step_index = 0
                         self.start_time = cur_time
                         self.state = STATE_RUNNING
+                elif self.state == STATE_PAUSED:
+                    self.state = STATE_RUNNING
 
             elif action == ACTION_STOP:
                 self.state = STATE_FINISHED
@@ -119,13 +126,18 @@ class Sequence:
                 if self.state == STATE_RUNNING:
                     self.state = STATE_PAUSED
 
-            elif (action == ACTION_FWD and
-                    self.cur_step_index < len(self.steps) - 1):
-                self.cur_step_index += 1
+            elif action == ACTION_FWD:
+                self.cur_step.state = Step.STATE_SKIPPED
+                if self.cur_step_index < len(self.steps) - 1:
+                    self.cur_step_index += 1
 
-            elif (action == ACTION_BWD and
-                    self.cur_step_index > 0):
-                self.cur_step_index -= 1
+            elif action == ACTION_BWD:
+                self.cur_step.state = Step.STATE_WAITING
+                self.cur_step.passed_seconds = 0
+                if self.cur_step_index > 0:
+                    self.cur_step_index -= 1
+                    self.cur_step.passed_seconds = 0
+                    self.cur_step.state = Step.STATE_WAITING
 
         # time counter for the whole sequence
         if self.state not in (STATE_FINISHED, STATE_STOPPED):
@@ -155,7 +167,7 @@ class Sequence:
         data = {
             'state': self.state,
             'time_total': '{:02}:{:02}:{:02}'.format(
-                *map(int, s_to_hms(max(0, self.time_total.total_seconds())))
+                *map(int, s_to_hms(self.time_total.total_seconds()))
             ),
         }
 
@@ -164,6 +176,7 @@ class Sequence:
                 'cur_step_state': self.cur_step.state,
                 'cur_step_id': self.cur_step.id,
                 'step_states': {x.id: x.state for x in self.steps},
+                'step_times': {x.id: x.formatted_time() for x in self.steps},
                 'time_cur_step': '{:02}:{:02}:{:02}'.format(
                     *map(int, s_to_hms(
                         max(0, self.cur_step.duration -

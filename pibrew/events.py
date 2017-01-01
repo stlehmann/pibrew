@@ -58,3 +58,22 @@ def on_stop_sequence():
     brew_controller.sequence.stop()
     logger.debug('sequence stopped')
     socketio.emit('sequence stopped')
+
+
+@socketio.on('pause sequence')
+def on_pause_sequence():
+    brew_controller.sequence.pause()
+    logger.debug('sequence paused')
+    socketio.emit('sequence paused')
+
+
+@socketio.on('next step')
+def on_next_step():
+    brew_controller.sequence.fwd()
+    logger.debug('next step')
+
+
+@socketio.on('previous step')
+def on_previous_step():
+    brew_controller.sequence.bwd()
+    logger.debug('previous step')
