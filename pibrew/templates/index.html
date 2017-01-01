@@ -148,7 +148,7 @@
           break;
       };
 
-      $('#state').text(data['temp_ct'] + ' °C' + '  ' + seq['time_total']);
+      $('#state').text(seq['time_total']);
     });
 
 
@@ -316,7 +316,7 @@
                   <button id="seqFwdBtn" class="btn btn-default"><span class="glyphicon glyphicon-step-forward"></span></button>
                 </div>
                 <div class="col-xs-6">
-                  <p id="state"> </p>
+                  <div id="state"> </div>
                 </div>
               </div>
             </div>
