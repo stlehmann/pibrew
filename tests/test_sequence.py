@@ -1,7 +1,6 @@
 import unittest
 import arrow
 from pibrew import create_app, db, brew_controller
-from pibrew.brewcontroller import BrewController
 from pibrew.models import SequenceStep
 import pibrew.sequence as seq
 

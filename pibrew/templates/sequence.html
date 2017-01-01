@@ -4,6 +4,18 @@
 {% block scripts %}
   {{ super() }}
   <script>
+
+    const SEQ_STATE_STOPPED = 0;
+    const SEQ_STATE_RUNNING = 1;
+    const SEQ_STATE_PAUSED = 2;
+    const SEQ_STATE_FINISHED = 3;
+
+    const STEP_STATE_WAITING = 0;
+    const STEP_STATE_HEATING = 1;
+    const STEP_STATE_HOLDING = 2;
+    const STEP_STATE_FINISHED = 3;
+    const STEP_STATE_SKIPPED = 4;
+
     $(document).ready(function() {
       // Activate current nav button
       $('#navSequence').addClass('active');
@@ -59,20 +71,54 @@
         $('#seqStartBtn').removeClass('active');
       });
 
+      // Cyclic update
       socket.on('update', function(data) {
+        // Update sequence data
         var seq = data['sequence'];
-        if (seq['state'] > 0) {
+        if (seq['state'] > SEQ_STATE_STOPPED) {
+
+          // Set state of all steps
+          for (var step_id in seq['step_states']) {
+            var row_id = '#stepRow' + step_id;
+            var state = seq['step_states'][step_id];
+
+            if (state == STEP_STATE_FINISHED) {
+              $(row_id).removeClass('active danger');
+              $(row_id).addClass('success');
+              $(row_id + ' .glyphicon-ok').show();
+              $(row_id + ' .glyphicon-arrow-right').hide();
+            }
+            else if (state == STEP_STATE_SKIPPED) {
+              $(row_id).removeClass('active success');
+              $(row_id).addClass('danger');
+              $(row_id + ' .glyphicon-ok').hide();
+              $(row_id + ' .glyphicon-arrow-right').hide();
+            }
+            else if ($.inArray(state, [STEP_STATE_HEATING, STEP_STATE_HOLDING]) > -1) {
+              $(row_id + ' .glyphicon-ok').hide();
+              $(row_id + ' .glyphicon-arrow-right').show();
+            }
+            else if (state == STEP_STATE_WAITING) {
+              $(row_id).removeClass('active success');
+              $(row_id).removeClass('danger');
+              $(row_id + ' .glyphicon-ok').hide();
+              $(row_id + ' .glyphicon-arrow-right').hide();
+            }
+          }
+
+          // Get row id of current step and mark it as current
           var row_id = '#stepRow' + seq['cur_step_id'];
+
           $('.step-action').hide();
           $(row_id).addClass('active');
           $(row_id + ' td').eq(3).text(seq['time_cur_step']);
+
         }
         else {
           $('.step-action').show();
         }
-        $('#state').text(data['temp_ct'] + ' °C');
+        $('#state').text(data['temp_ct'] + ' °C' + '  ' + seq['time_total']);
       });
-
     });
   </script>
 {% endblock %}
@@ -103,6 +149,8 @@
               <a class="step-action step-up-btn" href=""><span class="glyphicon glyphicon-arrow-up"></span></a>
               <a class="step-action step-down-btn" href=""><span class="glyphicon glyphicon-arrow-down"></span></a>
               <a class="step-action edit-step" href="{{ url_for('main.edit_step', step_id=step.id) }}"><span class="glyphicon glyphicon-edit"></span></a>
+              <span class="glyphicon glyphicon-ok" style="display: none;"></span>
+              <span class="glyphicon glyphicon-arrow-right" style="display: none;"></span>
             </td>
             <td>{{ step.name }}</td>
             <td>{{ step.temperature }}</td>

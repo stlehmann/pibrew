@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from .models import SequenceStep
+from . import socketio
 from utils import s_to_hms
 
 ACTION_START = 1
@@ -20,6 +21,7 @@ class Step:
     STATE_HEATING = 1
     STATE_HOLDING = 2
     STATE_FINISHED = 3
+    STATE_SKIPPED = 4
 
     def __init__(self, sequence, sequence_step: SequenceStep):
         self.sequence = sequence
@@ -49,13 +51,6 @@ class Step:
         elif self.state == self.STATE_HOLDING:
             if self.passed_seconds < self.duration:
                 self.passed_seconds += dt_s
-            else:
-                self.state = self.STATE_FINISHED
-
-        elif self.state == self.STATE_FINISHED:
-            if self.step_index < len(self.steps) - 1:
-                self.state = self.STATE_WAITING
-                self.step_index += 1
             else:
                 self.state = self.STATE_FINISHED
 
@@ -118,7 +113,7 @@ class Sequence:
                         self.state = STATE_RUNNING
 
             elif action == ACTION_STOP:
-                self.state = STATE_STOPPED
+                self.state = STATE_FINISHED
 
             elif action == ACTION_PAUSE:
                 if self.state == STATE_RUNNING:
@@ -142,26 +137,39 @@ class Sequence:
             # process current step
             step_state = self.cur_step.process(dt_s, temperature)
 
-            if step_state == Step.STATE_FINISHED:
+            if step_state in (Step.STATE_FINISHED, Step.STATE_SKIPPED):
                 if self.cur_step_index < len(self.steps) - 1:
                     self.cur_step_index += 1
                 else:
                     self.state = STATE_FINISHED
 
+        elif self.state == STATE_FINISHED:
+            self.brew_ctl.heater_enabled = False
+            self.brew_ctl.mixer_enabled = False
+            socketio.emit('sequence stopped')
+            self.state = STATE_STOPPED
+
         self.prev_time = cur_time
 
     def get_data(self):
-        if self.state == STATE_RUNNING:
-            return {
-                'state': self.state,
+        data = {
+            'state': self.state,
+            'time_total': '{:02}:{:02}:{:02}'.format(
+                *map(int, s_to_hms(max(0, self.time_total.total_seconds())))
+            ),
+        }
+
+        if self.state in (STATE_RUNNING, STATE_FINISHED):
+            data.update({
                 'cur_step_state': self.cur_step.state,
                 'cur_step_id': self.cur_step.id,
-                'time_total': '{}'.format(self.time_total),
+                'step_states': {x.id: x.state for x in self.steps},
                 'time_cur_step': '{:02}:{:02}:{:02}'.format(
-                    *map(int, s_to_hms(self.cur_step.passed_seconds))
+                    *map(int, s_to_hms(
+                        max(0, self.cur_step.duration -
+                            self.cur_step.passed_seconds)
+                    ))
                 )
-            }
-        else:
-            return {
-                'state': self.state,
-            }
+            })
+
+        return data
