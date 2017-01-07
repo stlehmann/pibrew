@@ -28,9 +28,9 @@ manager.add_command('db', MigrateCommand)
 
 
 @manager.command
-def run():
+def run(host='localhost', port=5000):
     from pibrew import socketio
-    socketio.run(app, host='0.0.0.0', port=5000, use_reloader=True)
+    socketio.run(app, host=host, port=port, use_reloader=True)
 
 
 @manager.command
