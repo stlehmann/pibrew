@@ -11,7 +11,7 @@ class Config(object):
     LOG_LEVEL = logging.WARNING
     SECRET_KEY = os.environ.get('SECRET_KEY',
                                 '9844f8c4eebfc08ed88cd3d64f201db3')
-    PROCESS_INTERVAL = 0.1  # interval for brew controller processing
+    PROCESS_INTERVAL = 2.5  # interval for brew controller processing
     SQLALCHEMY_COMMIT_ON_TEARDOWN = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 

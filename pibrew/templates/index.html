@@ -61,15 +61,20 @@
     // ----------------------------------------------
     // Update current process data
     socket.on('update', function(data) {
+      console.log(data);
       // Update gauge and power
       $('#temp_current').val(data['temp_ct']);
       $('#heater_power_pct').val(data['ht_pwr']);
 
       // Refresh Gauge
-      jqxLinearGauge($('#gauge'), {'value': data['temp_ct']});
+      var temp_ct = data['temp_ct'];
+      if (!isNaN(temp_ct)) {
+        jqxLinearGauge($('#gauge'), {'value': temp_ct});
+      };
 
       // Update flame state
       var vis_state = data['ht_on'] ? 'visible' : 'hidden';
+      console.log(vis_state);
       $('#flame').css('visibility', vis_state);
 
       // Update sequence data
@@ -234,7 +239,7 @@
     <div class="col-sm-4">
       <div class="visu-container">
         <img id="pot" src="{{ url_for('static', filename='einkocher.jpg') }}">
-        <img id="flame" src="{{ url_for('static', filename='flame.png') }}" style="display: none;">
+        <img id="flame" src="{{ url_for('static', filename='flame.png') }}">
         <div id="gauge"></div>
       </div>
     </div>

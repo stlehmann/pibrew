@@ -1,7 +1,8 @@
 import os
 import glob
 import time
-
+import timeit
+import threading
 
 class HdwInterface:  # pragma: no cover
     """ Only a common hardware interface """
@@ -43,6 +44,8 @@ class HdwRaspberry(HdwInterface):  # pragma: no cover
 
         self.base_dir = '/sys/bus/w1/devices/'
         self.tempsensor_file = None
+        self.cur_temp = 0
+        self.thread = None
 
         # get the device file for the temperature sensor
         try:
@@ -52,26 +55,33 @@ class HdwRaspberry(HdwInterface):  # pragma: no cover
         self.tempsensor_file = folder + '/w1_slave'
 
     def _read_raw_temp(self):
-        # read raw value from device file
-        with open(self.tempsensor_file, 'r') as f:
-            lines = f.readlines()
-        return lines
+        while True:
+            # read raw value from device file
+            with open(self.tempsensor_file, 'r') as f:
+                lines = f.readlines()
+
+            # keep on reading until codeword 'YES' is found
+            if lines[0].strip()[-3:] != 'YES':
+                return
+
+            # extract temperature
+            equals_pos = lines[1].find('t=')
+            if equals_pos != -1:
+                temp_string = lines[1][equals_pos + 2:]
+                temp_c = float(temp_string) / 1000.0
+                self.cur_temp = temp_c
+
+            # sleep for 10 seconds
+            time.sleep(10.0)
 
     def read_temp(self):
 
-        lines = self._read_raw_temp()
+        if self.thread is None or not self.thread.is_alive():
+            self.thread = threading.Thread(target=self._read_raw_temp)
+            self.thread.start()
 
-        # keep on reading until codeword 'YES' is found
-        while lines[0].strip()[-3:] != 'YES':
-            time.sleep(0.2)
-            lines = self._read_raw_temp()
+        return self.cur_temp
 
-        # extract temperature
-        equals_pos = lines[1].find('t=')
-        if equals_pos != -1:
-            temp_string = lines[1][equals_pos + 2:]
-            temp_c = float(temp_string) / 1000.0
-            return temp_c
 
     def _set_output(self, pin: int, state: bool):
         os.system('gpio -g write {pin} {state}'.format(
